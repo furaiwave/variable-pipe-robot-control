@@ -1,0 +1,514 @@
+openapi: 3.1.0
+info:
+  title: Variable-Pipe Robot Control – Simulation API
+  version: 0.1.0
+  description: |
+    Local HTTP API of the Rust simulation engine. All quantities are SI
+    (m, s, rad, kg, N, N·m). The server owns the authoritative simulation
+    state; clients send commands and render data.
+
+    Errors always use the body
+    `{ "error": { "code": string, "message": string, "details": [{ "field", "message" }] } }`.
+servers:
+  - url: http://127.0.0.1:8080/api
+tags:
+  - name: system
+  - name: configuration
+  - name: analysis
+  - name: simulations
+  - name: experiments
+paths:
+  /health:
+    get:
+      tags: [system]
+      summary: Health check
+      responses:
+        "200":
+          description: Server is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  engine_version: { type: string }
+                  uptime_s: { type: number }
+                  simulations: { type: integer }
+  /openapi.yaml:
+    get:
+      tags: [system]
+      summary: This document
+      responses:
+        "200": { description: OpenAPI document, content: { application/yaml: {} } }
+  /config/default:
+    get:
+      tags: [configuration]
+      summary: Default simulation configuration (illustrative robot and demonstration pipeline)
+      responses:
+        "200":
+          description: Default configuration
+          content: { application/json: { schema: { $ref: "#/components/schemas/SimulationConfig" } } }
+  /config/validate:
+    post:
+      tags: [configuration]
+      summary: Validate a configuration without creating a simulation
+      requestBody: { $ref: "#/components/requestBodies/SimulationConfig" }
+      responses:
+        "200":
+          description: Validation result (200 also for invalid configurations)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean }
+                  issues: { type: array, items: { $ref: "#/components/schemas/ValidationIssue" } }
+        "400": { $ref: "#/components/responses/Error" }
+  /analysis/feasibility:
+    post:
+      tags: [analysis]
+      summary: Static feasibility analysis of a centred, aligned robot along the pipe
+      description: |
+        Returns the clearance / lateral-margin / contact-angle profile, step
+        checks, slope limits, minimum feasible diameters and sampled pipe
+        geometry for drawing.
+      requestBody: { $ref: "#/components/requestBodies/SimulationConfig" }
+      responses:
+        "200":
+          description: Feasibility report
+          content: { application/json: { schema: { $ref: "#/components/schemas/FeasibilityReport" } } }
+        "422": { $ref: "#/components/responses/Error" }
+  /analysis/cross-section:
+    post:
+      tags: [analysis]
+      summary: Robot cross-section placed in a straight pipe of given diameter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [robot, diameter]
+              properties:
+                robot: { $ref: "#/components/schemas/RobotConfig" }
+                diameter: { type: number, minimum: 0.02, maximum: 5 }
+                lateral_offset: { type: number, default: 0 }
+                safety_margin: { type: number, default: 0.005 }
+      responses:
+        "200": { description: Cross-section geometry and clearances, content: { application/json: {} } }
+        "422": { $ref: "#/components/responses/Error" }
+  /experiments/presets:
+    get:
+      tags: [experiments]
+      summary: Predefined experiments A–F (complete deterministic configurations)
+      responses:
+        "200":
+          description: Presets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    code: { type: string }
+                    title: { type: string }
+                    objective: { type: string }
+                    description: { type: string }
+                    config: { $ref: "#/components/schemas/SimulationConfig" }
+                    controllers: { type: array, items: { $ref: "#/components/schemas/ControllerConfig" } }
+  /experiments/compare:
+    post:
+      tags: [experiments]
+      summary: Run one scenario with several controllers (identical conditions)
+      description: Runs are executed to completion on a blocking worker thread and registered as simulations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [config]
+              properties:
+                config: { $ref: "#/components/schemas/SimulationConfig" }
+                controllers:
+                  type: array
+                  minItems: 1
+                  maxItems: 6
+                  items: { $ref: "#/components/schemas/ControllerConfig" }
+      responses:
+        "200":
+          description: Comparison
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scenario_hash: { type: string }
+                  name: { type: string }
+                  report: { type: string, description: Markdown report generated from the results }
+                  run_ids: { type: array, items: { type: string, format: uuid } }
+                  runs: { type: array, items: { $ref: "#/components/schemas/SimulationResults" } }
+        "400": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /simulations:
+    get:
+      tags: [simulations]
+      summary: List simulations held by the server
+      responses:
+        "200": { description: Summaries, content: { application/json: {} } }
+    post:
+      tags: [simulations]
+      summary: Create and initialise a simulation (state Ready)
+      parameters:
+        - in: query
+          name: playback_speed
+          schema: { type: number, default: 1, minimum: 0.05, maximum: 1000 }
+      requestBody: { $ref: "#/components/requestBodies/SimulationConfig" }
+      responses:
+        "201": { $ref: "#/components/responses/Status" }
+        "400": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /simulations/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    delete:
+      tags: [simulations]
+      summary: Delete a simulation (cancels a running one)
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/start:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      tags: [simulations]
+      summary: Ready → Running (paced in real time × playback speed)
+      requestBody: { $ref: "#/components/requestBodies/Playback" }
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/pause:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      tags: [simulations]
+      summary: Running → Paused
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "409": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/resume:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      tags: [simulations]
+      summary: Paused → Running
+      requestBody: { $ref: "#/components/requestBodies/Playback" }
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "409": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/stop:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      tags: [simulations]
+      summary: Ready/Running/Paused → Cancelled
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "409": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/reset:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      tags: [simulations]
+      summary: Any state → Ready with the initial conditions
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+  /simulations/{id}/run:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    post:
+      tags: [simulations]
+      summary: Run to completion as fast as possible and return the results
+      responses:
+        "200":
+          description: Results
+          content: { application/json: { schema: { $ref: "#/components/schemas/SimulationResults" } } }
+        "409": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/playback:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    put:
+      tags: [simulations]
+      summary: Change the playback speed (simulated seconds per wall-clock second)
+      requestBody: { $ref: "#/components/requestBodies/Playback" }
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "400": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/status:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      tags: [simulations]
+      summary: Current status snapshot
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "404": { $ref: "#/components/responses/Error" }
+  /simulations/{id}/telemetry:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+      - { in: query, name: from, schema: { type: integer, default: 0 }, description: Index of the first sample }
+      - { in: query, name: stride, schema: { type: integer, default: 1 }, description: Return every n-th sample }
+      - { in: query, name: format, schema: { type: string, enum: [json, csv], default: json } }
+    get:
+      tags: [simulations]
+      summary: Telemetry samples (JSON page or CSV)
+      responses:
+        "200":
+          description: Telemetry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from: { type: integer }
+                  total: { type: integer }
+                  stride: { type: integer }
+                  samples: { type: array, items: { $ref: "#/components/schemas/TelemetrySample" } }
+            text/csv: {}
+  /simulations/{id}/results:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      tags: [simulations]
+      summary: Results (configuration, metrics, events, telemetry, report)
+      responses:
+        "200":
+          description: Results (status tells whether the run has finished)
+          content: { application/json: { schema: { $ref: "#/components/schemas/SimulationResults" } } }
+  /simulations/{id}/ws:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    get:
+      tags: [simulations]
+      summary: WebSocket telemetry stream
+      description: |
+        Server → client JSON messages tagged by `type`:
+        `snapshot` ({ id, playback_speed, snapshot }), `telemetry` ({ from, samples })
+        and `events` ({ events }). `from = 0` after a reset.
+      responses:
+        "101": { description: Switching protocols }
+components:
+  parameters:
+    Id:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+  requestBodies:
+    SimulationConfig:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/SimulationConfig" }
+    Playback:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              playback_speed: { type: number, minimum: 0.05, maximum: 1000 }
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string, enum: [validation_failed, invalid_json, unsupported_media_type, bad_request, not_found, invalid_state_transition, internal_error] }
+                  message: { type: string }
+                  details: { type: array, items: { $ref: "#/components/schemas/ValidationIssue" } }
+    Status:
+      description: Status snapshot
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/StatusResponse" }
+  schemas:
+    ValidationIssue:
+      type: object
+      properties:
+        field: { type: string, example: robot.wheel_radius }
+        message: { type: string }
+    SimulationStatus:
+      type: string
+      enum: [ready, running, paused, completed, failed, cancelled]
+    RobotConfig:
+      type: object
+      description: All lengths in m, angles in rad. See apps/web/src/types/api.ts for the full field list.
+      properties:
+        name: { type: string }
+        body_length: { type: number }
+        body_width: { type: number }
+        body_height: { type: number }
+        chassis_clearance: { type: number }
+        wheel_count: { type: integer, enum: [4, 6, 8] }
+        wheel_radius: { type: number }
+        wheel_width: { type: number }
+        wheelbase: { type: number }
+        track_width: { type: number }
+        mass: { type: number }
+        com_offset_x: { type: number }
+        com_height: { type: number }
+        max_linear_velocity: { type: number }
+        max_angular_velocity: { type: number }
+        max_wheel_speed: { type: number }
+        max_wheel_acceleration: { type: number }
+        max_motor_torque: { type: number }
+        rolling_resistance: { type: number }
+        friction_coefficient: { type: number }
+        lateral_friction_coefficient: { type: number }
+        motor_time_constant: { type: number }
+        max_contact_angle: { type: number }
+        sensor_noise:
+          type: object
+          properties:
+            position_std: { type: number }
+            heading_std: { type: number }
+    Segment:
+      type: object
+      required: [id, kind]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        kind: { type: string, enum: [straight, transition, bend] }
+        length: { type: number, description: straight/transition }
+        diameter: { type: number, description: straight/bend }
+        diameter_start: { type: number, description: transition }
+        diameter_end: { type: number, description: transition }
+        profile: { type: string, enum: [linear, smooth] }
+        bend_radius: { type: number, description: bend centreline radius }
+        angle: { type: number, description: bend angle (rad, + = left) }
+        inclination: { type: number }
+        min_clearance: { type: [number, "null"] }
+        restrictions:
+          type: array
+          items:
+            type: object
+            properties:
+              position: { type: number }
+              length: { type: number }
+              height: { type: number }
+              label: { type: string }
+    ControllerConfig:
+      oneOf:
+        - type: object
+          properties:
+            type: { const: kinematic }
+            k_x: { type: number }
+            k_y: { type: number }
+            k_theta: { type: number }
+        - type: object
+          properties:
+            type: { const: pid }
+            longitudinal_mode: { type: string, enum: [position, velocity] }
+            longitudinal: { $ref: "#/components/schemas/PidGains" }
+            lateral: { $ref: "#/components/schemas/PidGains" }
+            lookahead: { type: number }
+        - type: object
+          properties:
+            type: { const: gain_scheduled }
+            base: { type: object }
+            margin_reference: { type: number }
+            curvature_length: { type: number }
+            min_multiplier: { type: number }
+            max_multiplier: { type: number }
+            schedule_time_constant: { type: number }
+    PidGains:
+      type: object
+      properties:
+        kp: { type: number }
+        ki: { type: number }
+        kd: { type: number }
+        integral_limit: { type: number }
+        output_limit: { type: number }
+        derivative_filter: { type: number }
+        anti_windup_gain: { type: number }
+    SimulationConfig:
+      type: object
+      properties:
+        name: { type: string }
+        robot: { $ref: "#/components/schemas/RobotConfig" }
+        pipeline:
+          type: object
+          properties:
+            name: { type: string }
+            segments: { type: array, items: { $ref: "#/components/schemas/Segment" } }
+        controller: { $ref: "#/components/schemas/ControllerConfig" }
+        reference:
+          type: object
+          properties:
+            cruise_speed: { type: number }
+            max_acceleration: { type: number }
+            bend_speed_factor: { type: number }
+            lateral_offset: { type: number }
+        initial:
+          type: object
+          properties:
+            station: { type: [number, "null"] }
+            lateral_offset: { type: number }
+            heading_error: { type: number }
+        disturbances:
+          type: object
+          properties:
+            wheel_radius_mismatch: { type: number }
+        time_step: { type: number }
+        max_duration: { type: number }
+        telemetry_interval: { type: number }
+        safety_margin: { type: number }
+        stop_on_collision: { type: boolean }
+        seed: { type: integer }
+    TelemetrySample:
+      type: object
+      description: See crates/simulation-engine/src/telemetry.rs for field semantics.
+      additionalProperties: { type: number }
+    StatusResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        playback_speed: { type: number }
+        status: { $ref: "#/components/schemas/SimulationStatus" }
+        time: { type: number }
+        step: { type: integer }
+        progress: { type: number }
+        station: { type: number }
+        start_station: { type: number }
+        goal_station: { type: number }
+        pipeline_length: { type: number }
+        telemetry_count: { type: integer }
+        violation_count: { type: integer }
+        collision_count: { type: integer }
+        latest: { oneOf: [{ $ref: "#/components/schemas/TelemetrySample" }, { type: "null" }] }
+        failure: { type: [object, "null"] }
+        controller: { type: string }
+        name: { type: string }
+    FeasibilityReport:
+      type: object
+      properties:
+        feasible: { type: boolean }
+        has_warnings: { type: boolean }
+        issues: { type: array, items: { type: object } }
+        profile: { type: array, items: { type: object } }
+        steps: { type: array, items: { type: object } }
+        min_feasible_diameter: { type: [object, "null"] }
+        geometry: { type: array, items: { type: object } }
+    SimulationResults:
+      type: object
+      properties:
+        engine_version: { type: string }
+        scenario_hash: { type: string }
+        name: { type: string }
+        controller: { type: string }
+        controller_name: { type: string }
+        status: { $ref: "#/components/schemas/SimulationStatus" }
+        failure: { type: [object, "null"] }
+        metrics: { type: object }
+        events: { type: array, items: { type: object } }
+        telemetry: { type: array, items: { $ref: "#/components/schemas/TelemetrySample" } }
+        config: { $ref: "#/components/schemas/SimulationConfig" }
+        report: { type: string }

@@ -1,0 +1,26 @@
+[package]
+name = "simulation-engine"
+description = "Deterministic fixed-step simulation of a wheeled robot in a variable-cross-section pipeline"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+robot-core.workspace = true
+pipeline-geometry.workspace = true
+control-algorithms.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bin]]
+name = "pipesim"
+path = "src/bin/pipesim.rs"
+
+[[bench]]
+name = "simulation"
+harness = false

@@ -1,0 +1,158 @@
+{
+  "id": "a-constant-diameter",
+  "code": "A",
+  "title": "Constant-diameter pipeline",
+  "objective": "Baseline tracking and steady motion without geometric excitation.",
+  "description": "4 m straight pipe, D = 250 mm. Robot starts 10 mm left of the centreline, aligned. Reference: 0.15 m/s cruise, 0.2 m/s² ramps. No disturbances, no noise.",
+  "config": {
+    "name": "A – Constant-diameter pipeline",
+    "robot": {
+      "name": "Illustrative 4WD inspection robot",
+      "body_length": 0.2,
+      "body_width": 0.1,
+      "body_height": 0.07,
+      "chassis_clearance": 0.02,
+      "wheel_count": 4,
+      "wheel_radius": 0.03,
+      "wheel_width": 0.02,
+      "wheelbase": 0.1,
+      "track_width": 0.12,
+      "mass": 2.5,
+      "com_offset_x": 0.0,
+      "com_height": 0.05,
+      "max_linear_velocity": 0.3,
+      "max_angular_velocity": 1.5,
+      "max_wheel_speed": 12.0,
+      "max_wheel_acceleration": 30.0,
+      "max_motor_torque": 0.1,
+      "rolling_resistance": 0.03,
+      "friction_coefficient": 0.6,
+      "lateral_friction_coefficient": 0.3,
+      "motor_time_constant": 0.08,
+      "max_contact_angle": 0.8726646259971648,
+      "sensor_noise": {
+        "position_std": 0.0,
+        "heading_std": 0.0
+      }
+    },
+    "pipeline": {
+      "name": "Straight DN250, 4 m",
+      "segments": [
+        {
+          "id": "a1",
+          "label": "Straight DN250",
+          "kind": "straight",
+          "length": 4.0,
+          "diameter": 0.25,
+          "inclination": 0.0,
+          "min_clearance": null,
+          "restrictions": []
+        }
+      ]
+    },
+    "controller": {
+      "type": "pid",
+      "longitudinal_mode": "position",
+      "longitudinal": {
+        "kp": 1.5,
+        "ki": 0.3,
+        "kd": 0.0,
+        "integral_limit": 0.05,
+        "output_limit": 0.15,
+        "derivative_filter": 0.05,
+        "anti_windup_gain": 2.0
+      },
+      "lateral": {
+        "kp": 8.0,
+        "ki": 2.0,
+        "kd": 0.5,
+        "integral_limit": 0.5,
+        "output_limit": 2.0,
+        "derivative_filter": 0.05,
+        "anti_windup_gain": 2.0
+      },
+      "lookahead": 0.15
+    },
+    "reference": {
+      "cruise_speed": 0.15,
+      "max_acceleration": 0.2,
+      "bend_speed_factor": 0.7,
+      "lateral_offset": 0.0
+    },
+    "initial": {
+      "station": null,
+      "lateral_offset": 0.01,
+      "heading_error": 0.0
+    },
+    "disturbances": {
+      "wheel_radius_mismatch": 0.0
+    },
+    "time_step": 0.005,
+    "max_duration": 120.0,
+    "telemetry_interval": 0.02,
+    "safety_margin": 0.005,
+    "stop_on_collision": true,
+    "seed": 1
+  },
+  "controllers": [
+    {
+      "type": "kinematic",
+      "k_x": 1.5,
+      "k_y": 50.0,
+      "k_theta": 10.0
+    },
+    {
+      "type": "pid",
+      "longitudinal_mode": "position",
+      "longitudinal": {
+        "kp": 1.5,
+        "ki": 0.3,
+        "kd": 0.0,
+        "integral_limit": 0.05,
+        "output_limit": 0.15,
+        "derivative_filter": 0.05,
+        "anti_windup_gain": 2.0
+      },
+      "lateral": {
+        "kp": 8.0,
+        "ki": 2.0,
+        "kd": 0.5,
+        "integral_limit": 0.5,
+        "output_limit": 2.0,
+        "derivative_filter": 0.05,
+        "anti_windup_gain": 2.0
+      },
+      "lookahead": 0.15
+    },
+    {
+      "type": "gain_scheduled",
+      "base": {
+        "longitudinal_mode": "position",
+        "longitudinal": {
+          "kp": 1.5,
+          "ki": 0.3,
+          "kd": 0.0,
+          "integral_limit": 0.05,
+          "output_limit": 0.15,
+          "derivative_filter": 0.05,
+          "anti_windup_gain": 2.0
+        },
+        "lateral": {
+          "kp": 8.0,
+          "ki": 2.0,
+          "kd": 0.5,
+          "integral_limit": 0.5,
+          "output_limit": 2.0,
+          "derivative_filter": 0.05,
+          "anti_windup_gain": 2.0
+        },
+        "lookahead": 0.15
+      },
+      "margin_reference": 0.03,
+      "curvature_length": 0.3,
+      "min_multiplier": 0.6,
+      "max_multiplier": 2.5,
+      "schedule_time_constant": 0.2
+    }
+  ]
+}

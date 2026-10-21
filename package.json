@@ -1,0 +1,19 @@
+{
+  "name": "variable-pipe-robot-control",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Control system for a wheeled robot moving inside pipelines with variable cross-section (simulation, Rust engine + React UI)",
+  "scripts": {
+    "setup": "npm --prefix apps/web install && cargo build -p api-server",
+    "dev": "node scripts/dev.mjs",
+    "dev:release": "node scripts/dev.mjs --release",
+    "api": "cargo run --release -p api-server",
+    "web": "npm --prefix apps/web run dev",
+    "build": "cargo build --release --workspace && npm --prefix apps/web run build",
+    "test": "cargo test --workspace && npm --prefix apps/web test",
+    "test:integration": "npm --prefix apps/web run test:integration",
+    "lint": "cargo clippy --workspace --all-targets -- -D warnings && npm --prefix apps/web run lint && npm --prefix apps/web run typecheck",
+    "bench": "cargo bench -p simulation-engine",
+    "experiments": "cargo run --release -p simulation-engine --bin pipesim -- presets examples/experiments"
+  }
+}

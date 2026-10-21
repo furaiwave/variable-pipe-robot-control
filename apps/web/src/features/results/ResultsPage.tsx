@@ -1,0 +1,167 @@
+import { useRef } from 'react'
+import { ChartLine, FileJson, FileSpreadsheet, Trash2, Upload } from 'lucide-react'
+import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { EmptyState, PageHeader, Section, StatusBadge } from '@/components/common'
+import { Markdown } from '@/components/common/Markdown'
+import { exportResultsCsv as exportCsv, exportResultsJson as exportJson, parseExperimentJson } from '@/lib/export'
+import { cn } from '@/lib/utils'
+import { CONTROLLER_SHORT } from '@/lib/violations'
+import { type StoredRun, useResultsStore } from '@/stores/results-store'
+import { ViolationsPanel } from '@/features/simulation/ViolationsPanel'
+import type { SimulationResults } from '@/types/api'
+import { ComparisonView } from './ComparisonView'
+import { MetricsTable } from './MetricsTable'
+import { ResultCharts } from './ResultCharts'
+
+function RunList({ runs, selected, onToggle, onRemove }: { runs: StoredRun[]; selected: string[]; onToggle: (k: string) => void; onRemove: (k: string) => void }) {
+  return (
+    <ul className="max-h-[560px] space-y-1 overflow-y-auto pr-1" aria-label="Simulation runs">
+      {runs.map((r) => {
+        const on = selected.includes(r.key)
+        return (
+          <li key={r.key} className={cn('flex items-start gap-2 rounded-md border px-2 py-1.5 text-xs', on ? 'border-primary/60 bg-primary/10' : 'border-transparent hover:bg-muted')}>
+            <input type="checkbox" className="mt-0.5 accent-[var(--primary)]" checked={on} onChange={() => onToggle(r.key)} aria-label={`Select run ${r.results.name} (${r.results.controller})`} />
+            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onToggle(r.key)}>
+              <div className="truncate font-medium">{r.results.name}</div>
+              <div className="flex flex-wrap items-center gap-1 text-muted-foreground">
+                <span>{CONTROLLER_SHORT[r.results.controller]}</span>·<span>{r.source}</span>·<span className="tabular">{r.results.metrics.simulated_duration.toFixed(1)} s</span>
+              </div>
+            </button>
+            <div className="flex flex-col items-end gap-1">
+              <StatusBadge status={r.results.status} />
+              <Button size="icon-xs" variant="ghost" aria-label="Remove run" onClick={() => onRemove(r.key)}>
+                <Trash2 />
+              </Button>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+export function RunDetail({ results }: { results: SimulationResults }) {
+  return (
+    <div className="space-y-4">
+      <Section
+        title={
+          <span className="flex flex-wrap items-center gap-2">
+            {results.name} <Badge variant="outline">{results.controller_name}</Badge>
+          </span>
+        }
+        description={`Engine ${results.engine_version} · scenario ${results.scenario_hash} · seed ${results.config.seed}`}
+        actions={
+          <>
+            <Button size="sm" variant="outline" onClick={() => exportCsv(results)}>
+              <FileSpreadsheet /> Telemetry CSV
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => exportJson(results)}>
+              <FileJson /> Experiment JSON
+            </Button>
+          </>
+        }
+      >
+        <ViolationsPanel status={results.status} failure={results.failure} events={results.events} maxItems={50} />
+      </Section>
+      <div className="grid gap-4 2xl:grid-cols-[1fr_460px]">
+        <Section title="Plots" source="calc">
+          <ResultCharts results={results} />
+        </Section>
+        <Section title="Performance metrics" source="calc">
+          <MetricsTable metrics={results.metrics} robot={results.config.robot} />
+        </Section>
+      </div>
+      <Section title="Automatically generated report" source="calc">
+        <Markdown text={results.report} />
+      </Section>
+    </div>
+  )
+}
+
+export function ResultsPage() {
+  const runs = useResultsStore((s) => s.runs)
+  const selected = useResultsStore((s) => s.selected)
+  const comparisons = useResultsStore((s) => s.comparisons)
+  const { toggleSelected, removeRun, addRun, setSelected, clear } = useResultsStore.getState()
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const chosen = selected.map((k) => runs.find((r) => r.key === k)).filter((r): r is StoredRun => Boolean(r))
+  const cmp = comparisons.find((c) => c.runKeys.length === chosen.length && c.runKeys.every((k) => selected.includes(k)))
+
+  const onImport = async (files: FileList | null) => {
+    for (const f of Array.from(files ?? [])) {
+      try {
+        const r = parseExperimentJson(await f.text())
+        addRun(r, 'import')
+        toast.success(`Imported ${f.name}`)
+      } catch (e) {
+        toast.error(`${f.name}: ${e instanceof Error ? e.message : String(e)}`)
+      }
+    }
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Results and analysis"
+        description="Select one run for detailed analysis or several runs of the same scenario to compare them."
+        actions={
+          <>
+            <input ref={fileRef} type="file" accept="application/json,.json" multiple hidden onChange={(e) => void onImport(e.target.files)} />
+            <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+              <Upload /> Import JSON
+            </Button>
+            {runs.length ? (
+              <Button size="sm" variant="ghost" onClick={clear}>
+                <Trash2 /> Clear all
+              </Button>
+            ) : null}
+          </>
+        }
+      />
+      {runs.length === 0 ? (
+        <EmptyState icon={<ChartLine />} title="No results yet">
+          Run a simulation in the workspace, run an experiment comparison, or import an exported experiment JSON. Results are kept in memory for this browser session — export them to keep them.
+        </EmptyState>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-[280px_1fr]">
+          <Section
+            title="Runs"
+            description={`${runs.length} in memory`}
+            actions={
+              chosen.length > 1 ? (
+                <Button size="xs" variant="ghost" onClick={() => setSelected([])}>
+                  Clear selection
+                </Button>
+              ) : null
+            }
+          >
+            <RunList runs={runs} selected={selected} onToggle={toggleSelected} onRemove={removeRun} />
+            {comparisons.length ? (
+              <div className="mt-3 space-y-1 border-t pt-2">
+                <p className="text-xs font-medium">Comparisons</p>
+                {comparisons.map((c) => (
+                  <button key={c.key} type="button" className="block w-full truncate rounded px-1 text-left text-xs text-muted-foreground hover:bg-muted" onClick={() => setSelected(c.runKeys)}>
+                    {c.name} ({c.runKeys.length} runs)
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </Section>
+          <div className="min-w-0">
+            {chosen.length === 0 ? (
+              <EmptyState title="Select a run" />
+            ) : chosen.length === 1 ? (
+              <RunDetail results={chosen[0]!.results} />
+            ) : (
+              <ComparisonView runs={chosen} report={cmp?.report} />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

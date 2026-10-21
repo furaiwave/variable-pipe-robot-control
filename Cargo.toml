@@ -1,0 +1,37 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/robot-core",
+    "crates/pipeline-geometry",
+    "crates/control-algorithms",
+    "crates/simulation-engine",
+    "crates/api-server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+rust-version = "1.85"
+
+[workspace.dependencies]
+robot-core = { path = "crates/robot-core" }
+pipeline-geometry = { path = "crates/pipeline-geometry" }
+control-algorithms = { path = "crates/control-algorithms" }
+simulation-engine = { path = "crates/simulation-engine" }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "sync", "time", "signal", "net"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.7", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1.28", features = ["v4", "serde"] }
+futures-util = "0.3"
+criterion = "0.8"
+
+[profile.dev.package."*"]
+opt-level = 2

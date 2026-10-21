@@ -1,0 +1,25 @@
+[package]
+name = "api-server"
+description = "Axum HTTP/WebSocket API around the simulation engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+robot-core.workspace = true
+control-algorithms.workspace = true
+simulation-engine.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+axum = { workspace = true, features = ["ws", "macros"] }
+tokio.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+futures-util.workspace = true
+
+[dev-dependencies]
+tower.workspace = true
+http-body-util = "0.1"
