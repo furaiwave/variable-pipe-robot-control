@@ -49,12 +49,12 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
   const tracks = useMemo(
     () => [
       {
-        label: 'reference',
+        label: 'опорна',
         color: 'var(--chart-1)',
         dashed: true,
         points: decimate(results.telemetry, 3000).map((s) => ({ x: s.x_ref, y: s.y_ref })),
       },
-      { label: 'actual', color: 'var(--chart-2)', points: decimate(results.telemetry, 3000).map((s) => ({ x: s.x, y: s.y })) },
+      { label: 'фактична', color: 'var(--chart-2)', points: decimate(results.telemetry, 3000).map((s) => ({ x: s.x, y: s.y })) },
     ],
     [results],
   )
@@ -63,12 +63,12 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
   return (
     <Tabs defaultValue="trajectory">
       <TabsList className="flex-wrap">
-        <TabsTrigger value="trajectory">Trajectory</TabsTrigger>
-        <TabsTrigger value="errors">Errors</TabsTrigger>
-        <TabsTrigger value="velocity">Velocities</TabsTrigger>
-        <TabsTrigger value="wheels">Wheels & torque</TabsTrigger>
-        <TabsTrigger value="clearance">Clearance</TabsTrigger>
-        <TabsTrigger value="control">Control inputs</TabsTrigger>
+        <TabsTrigger value="trajectory">Траєкторія</TabsTrigger>
+        <TabsTrigger value="errors">Похибки</TabsTrigger>
+        <TabsTrigger value="velocity">Швидкості</TabsTrigger>
+        <TabsTrigger value="wheels">Колеса й момент</TabsTrigger>
+        <TabsTrigger value="clearance">Зазор</TabsTrigger>
+        <TabsTrigger value="control">Керувальні впливи</TabsTrigger>
       </TabsList>
       <TabsContent value="trajectory" className="space-y-3">
         <PipeCanvas
@@ -78,17 +78,17 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
           pose={last ? { x: last.x, y: last.y, theta: last.theta } : null}
           tracks={tracks}
           steps={report?.steps}
-          ariaLabel="Desired (dashed) and actual (solid) trajectories"
+          ariaLabel="Бажана (пунктир) і фактична (суцільна) траєкторії"
         />
         <SeriesChart
           data={data}
           x="s"
-          xLabel="s [m]"
-          yLabel="lateral offset [mm]"
+          xLabel="s [м]"
+          yLabel="бічне зміщення [мм]"
           digits={1}
           series={[
-            { key: 'd', label: 'Actual offset from centreline', color: chartColors.c2 },
-            { key: 'dref', label: 'Desired', color: chartColors.c1, dashed: true },
+            { key: 'd', label: 'Фактичне зміщення від осі', color: chartColors.c2 },
+            { key: 'dref', label: 'Бажане', color: chartColors.c1, dashed: true },
           ]}
         />
       </TabsContent>
@@ -96,42 +96,42 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
         <SeriesChart
           data={data}
           x="t"
-          xLabel="t [s]"
-          yLabel="error [mm]"
+          xLabel="t [с]"
+          yLabel="похибка [мм]"
           digits={1}
           syncId="res"
           series={[
-            { key: 'epos', label: 'Position |p − p_ref|', color: chartColors.c2 },
-            { key: 'elat', label: 'Cross-track', color: chartColors.c1 },
-            { key: 'ealong', label: 'Along-track lag', color: chartColors.c3 },
+            { key: 'epos', label: 'Положення |p − p_ref|', color: chartColors.c2 },
+            { key: 'elat', label: 'Поперечна', color: chartColors.c1 },
+            { key: 'ealong', label: 'Поздовжнє відставання', color: chartColors.c3 },
           ]}
         />
-        <SeriesChart data={data} x="t" xLabel="t [s]" yLabel="e_θ [°]" digits={2} syncId="res" series={[{ key: 'ehead', label: 'Orientation error', color: chartColors.c4 }]} />
+        <SeriesChart data={data} x="t" xLabel="t [с]" yLabel="e_θ [°]" digits={2} syncId="res" series={[{ key: 'ehead', label: 'Похибка орієнтації', color: chartColors.c4 }]} />
       </TabsContent>
       <TabsContent value="velocity" className="grid gap-3 lg:grid-cols-2">
         <SeriesChart
           data={data}
           x="t"
-          xLabel="t [s]"
-          yLabel="v [m/s]"
+          xLabel="t [с]"
+          yLabel="v [м/с]"
           syncId="res"
           refLines={[{ y: robot.max_linear_velocity, label: 'v_max', color: chartColors.warning }]}
           series={[
-            { key: 'v', label: 'Actual', color: chartColors.c2 },
-            { key: 'vref', label: 'Reference', color: chartColors.c1, dashed: true },
-            { key: 'vcmd', label: 'Command', color: chartColors.c3, width: 1 },
+            { key: 'v', label: 'Фактична', color: chartColors.c2 },
+            { key: 'vref', label: 'Опорна', color: chartColors.c1, dashed: true },
+            { key: 'vcmd', label: 'Команда', color: chartColors.c3, width: 1 },
           ]}
         />
         <SeriesChart
           data={data}
           x="t"
-          xLabel="t [s]"
-          yLabel="ω [rad/s]"
+          xLabel="t [с]"
+          yLabel="ω [рад/с]"
           syncId="res"
           series={[
-            { key: 'w', label: 'Actual', color: chartColors.c2 },
-            { key: 'wref', label: 'Reference', color: chartColors.c1, dashed: true },
-            { key: 'wcmd', label: 'Command', color: chartColors.c3, width: 1 },
+            { key: 'w', label: 'Фактична', color: chartColors.c2 },
+            { key: 'wref', label: 'Опорна', color: chartColors.c1, dashed: true },
+            { key: 'wcmd', label: 'Команда', color: chartColors.c3, width: 1 },
           ]}
         />
       </TabsContent>
@@ -139,23 +139,23 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
         <SeriesChart
           data={data}
           x="t"
-          xLabel="t [s]"
-          yLabel="ω_wheel [rad/s]"
+          xLabel="t [с]"
+          yLabel="ω_wheel [рад/с]"
           digits={2}
           syncId="res"
-          refLines={[{ y: robot.max_wheel_speed, label: 'limit', color: chartColors.warning }]}
+          refLines={[{ y: robot.max_wheel_speed, label: 'межа', color: chartColors.warning }]}
           series={[
-            { key: 'wl', label: 'Left', color: chartColors.c1 },
-            { key: 'wr', label: 'Right', color: chartColors.c2 },
-            { key: 'wlc', label: 'Left cmd', color: chartColors.c1, dashed: true, width: 1 },
-            { key: 'wrc', label: 'Right cmd', color: chartColors.c2, dashed: true, width: 1 },
+            { key: 'wl', label: 'Ліве', color: chartColors.c1 },
+            { key: 'wr', label: 'Праве', color: chartColors.c2 },
+            { key: 'wlc', label: 'Ліве, команда', color: chartColors.c1, dashed: true, width: 1 },
+            { key: 'wrc', label: 'Праве, команда', color: chartColors.c2, dashed: true, width: 1 },
           ]}
         />
         <SeriesChart
           data={data}
           x="t"
-          xLabel="t [s]"
-          yLabel="τ per motor [N·m]"
+          xLabel="t [с]"
+          yLabel="τ на двигун [Н·м]"
           digits={3}
           syncId="res"
           refLines={[
@@ -163,10 +163,10 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
             { y: -robot.max_motor_torque, label: '−τ_max', color: chartColors.danger },
           ]}
           series={[
-            { key: 'tl', label: 'Left (delivered)', color: chartColors.c1 },
-            { key: 'tr', label: 'Right (delivered)', color: chartColors.c2 },
-            { key: 'tdl', label: 'Left demand', color: chartColors.c1, dashed: true, width: 1 },
-            { key: 'tdr', label: 'Right demand', color: chartColors.c2, dashed: true, width: 1 },
+            { key: 'tl', label: 'Лівий (фактичний)', color: chartColors.c1 },
+            { key: 'tr', label: 'Правий (фактичний)', color: chartColors.c2 },
+            { key: 'tdl', label: 'Лівий (потрібний)', color: chartColors.c1, dashed: true, width: 1 },
+            { key: 'tdr', label: 'Правий (потрібний)', color: chartColors.c2, dashed: true, width: 1 },
           ]}
         />
       </TabsContent>
@@ -174,44 +174,44 @@ export function ResultCharts({ results }: { results: SimulationResults }) {
         <SeriesChart
           data={data}
           x="s"
-          xLabel="s [m]"
-          yLabel="[mm]"
+          xLabel="s [м]"
+          yLabel="[мм]"
           digits={1}
-          refLines={[{ y: 0, label: 'wall', color: chartColors.danger }]}
+          refLines={[{ y: 0, label: 'стінка', color: chartColors.danger }]}
           series={[
-            { key: 'clr', label: 'Min. robot-to-pipe clearance', color: chartColors.c3 },
-            { key: 'req', label: 'Required', color: chartColors.warning, dashed: true },
-            { key: 'margin', label: 'Static lateral margin ahead', color: chartColors.c4, width: 1 },
+            { key: 'clr', label: 'Мін. зазор робот–труба', color: chartColors.c3 },
+            { key: 'req', label: 'Необхідний', color: chartColors.warning, dashed: true },
+            { key: 'margin', label: 'Статичний бічний запас попереду', color: chartColors.c4, width: 1 },
           ]}
         />
         <SeriesChart
           data={data}
           x="s"
-          xLabel="s [m]"
+          xLabel="s [м]"
           yLabel="β [°]"
           digits={1}
-          refLines={[{ y: robot.max_contact_angle * RAD2DEG, label: 'limit', color: chartColors.warning }]}
-          series={[{ key: 'ca', label: 'Wall contact angle', color: chartColors.c2 }]}
+          refLines={[{ y: robot.max_contact_angle * RAD2DEG, label: 'межа', color: chartColors.warning }]}
+          series={[{ key: 'ca', label: 'Кут контакту зі стінкою', color: chartColors.c2 }]}
         />
-        <SeriesChart data={data} x="s" xLabel="s [m]" yLabel="D [mm]" digits={0} height={180} series={[{ key: 'dia', label: 'Local diameter', color: chartColors.c1 }]} />
-        <SeriesChart data={data} x="s" xLabel="s [m]" yLabel="slope [°]" digits={1} height={180} series={[{ key: 'slope', label: 'Effective slope', color: chartColors.c5 }]} />
+        <SeriesChart data={data} x="s" xLabel="s [м]" yLabel="D [мм]" digits={0} height={180} series={[{ key: 'dia', label: 'Локальний діаметр', color: chartColors.c1 }]} />
+        <SeriesChart data={data} x="s" xLabel="s [м]" yLabel="нахил [°]" digits={1} height={180} series={[{ key: 'slope', label: 'Ефективний нахил', color: chartColors.c5 }]} />
       </TabsContent>
       <TabsContent value="control" className="grid gap-3 lg:grid-cols-2">
         <SeriesChart
           data={data}
           x="t"
-          xLabel="t [s]"
-          yLabel="command"
+          xLabel="t [с]"
+          yLabel="команда"
           syncId="res"
           series={[
-            { key: 'vcmd', label: 'v_cmd [m/s]', color: chartColors.c3 },
-            { key: 'wcmd', label: 'ω_cmd [rad/s]', color: chartColors.c4 },
+            { key: 'vcmd', label: 'v_cmd [м/с]', color: chartColors.c3 },
+            { key: 'wcmd', label: 'ω_cmd [рад/с]', color: chartColors.c4 },
           ]}
         />
-        <SeriesChart data={data} x="t" xLabel="t [s]" yLabel="gain multiplier" digits={2} syncId="res" series={[{ key: 'gain', label: 'm (scheduled gain factor)', color: chartColors.c1 }]} />
+        <SeriesChart data={data} x="t" xLabel="t [с]" yLabel="множник коефіцієнтів" digits={2} syncId="res" series={[{ key: 'gain', label: 'm (множник планування)', color: chartColors.c1 }]} />
       </TabsContent>
       <p className="mt-2 text-[11px] text-muted-foreground">
-        Plots show the recorded telemetry ({results.telemetry.length} samples, decimated for display with peak preservation). Metrics are computed by the engine at every integration step.
+        Графіки побудовано за записаною телеметрією ({results.telemetry.length} відліків, проріджено для відображення зі збереженням піків). Показники рушій обчислює на кожному кроці інтегрування.
       </p>
     </Tabs>
   )

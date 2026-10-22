@@ -79,7 +79,7 @@ export function ControllerParamsForm<T extends FieldValues>({
       {modePath ? (
         <div className="space-y-1">
           <Label htmlFor={`${idPrefix}-mode`} className="text-xs">
-            Longitudinal loop regulates
+            Поздовжній контур регулює
           </Label>
           <Select
             value={String(get(watch(), modePath) ?? 'position')}
@@ -89,8 +89,8 @@ export function ControllerParamsForm<T extends FieldValues>({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="position">Trajectory (along-track position error e_x)</SelectItem>
-              <SelectItem value="velocity">Velocity tracking error (v_r − v)</SelectItem>
+              <SelectItem value="position">Траєкторію (поздовжня похибка положення e_x)</SelectItem>
+              <SelectItem value="velocity">Похибку швидкості (v_r − v)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -122,10 +122,10 @@ export function ControllerParamsForm<T extends FieldValues>({
 
 export const pidGainFields = (prefix: string, outUnit: string, errUnit: string): ParamField[] => [
   { path: `${prefix}.kp`, label: 'K_p', unit: `${outUnit}/${errUnit}`, step: 0.1 },
-  { path: `${prefix}.ki`, label: 'K_i', unit: `${outUnit}/(${errUnit}·s)`, step: 0.1 },
-  { path: `${prefix}.kd`, label: 'K_d', unit: `${outUnit}·s/${errUnit}`, step: 0.05 },
-  { path: `${prefix}.output_limit`, label: 'Output limit ±', unit: outUnit, step: 0.01 },
-  { path: `${prefix}.integral_limit`, label: 'Integral limit ±', unit: outUnit, step: 0.01 },
-  { path: `${prefix}.derivative_filter`, label: 'D filter T_f', unit: 's', step: 0.01 },
-  { path: `${prefix}.anti_windup_gain`, label: 'Anti-windup K_t', unit: '1/s', step: 0.1 },
+  { path: `${prefix}.ki`, label: 'K_i', unit: `${outUnit}/(${errUnit}·с)`, step: 0.1 },
+  { path: `${prefix}.kd`, label: 'K_d', unit: `${outUnit}·с/${errUnit}`, step: 0.05 },
+  { path: `${prefix}.output_limit`, label: 'Межа виходу ±', unit: outUnit, step: 0.01 },
+  { path: `${prefix}.integral_limit`, label: 'Межа інтеграла ±', unit: outUnit, step: 0.01 },
+  { path: `${prefix}.derivative_filter`, label: 'Фільтр D T_f', unit: 'с', step: 0.01 },
+  { path: `${prefix}.anti_windup_gain`, label: 'Анти-віндап K_t', unit: '1/с', step: 0.1 },
 ]

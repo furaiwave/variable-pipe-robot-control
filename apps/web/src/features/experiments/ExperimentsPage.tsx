@@ -9,6 +9,7 @@ import { EmptyState, KeyValue, PageHeader, Section } from '@/components/common'
 import { FeasibilityPanel, FeasibilityVerdict } from '@/components/analysis/FeasibilityPanel'
 import { ApiError, api } from '@/services/api'
 import { fmt } from '@/lib/format'
+import { localizePreset } from '@/lib/localize'
 import { CONTROLLER_SHORT } from '@/lib/violations'
 import { CONTROLLER_TYPES, controllerConfig, useConfigStore } from '@/stores/config-store'
 import { useResultsStore } from '@/stores/results-store'
@@ -26,7 +27,7 @@ export function ExperimentsPage() {
   useEffect(() => {
     api
       .presets()
-      .then(setPresets)
+      .then((ps) => setPresets(ps.map(localizePreset)))
       .catch((e) => setError(e instanceof ApiError ? e.describe() : String(e)))
   }, [])
 
@@ -35,7 +36,7 @@ export function ExperimentsPage() {
     try {
       const resp = await api.compare(p.config, p.controllers)
       addComparison(resp)
-      toast.success(`${p.code}: ${resp.runs.length} run(s) completed`)
+      toast.success(`${p.code}: завершено запусків — ${resp.runs.length}`)
       navigate('/results')
     } catch (e) {
       toast.error(e instanceof ApiError ? e.describe() : String(e))
@@ -76,16 +77,16 @@ export function ExperimentsPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Experiments"
-        description="Predefined, fully deterministic scenarios. Every compared run uses identical pipeline, robot, reference, initial conditions, disturbances and seed."
+        title="Експерименти"
+        description="Наперед задані, повністю детерміновані сценарії. Кожен порівнюваний запуск використовує однакові трубопровід, робота, опорну траєкторію, початкові умови, збурення та зерно генератора."
         actions={
           <Button variant="outline" onClick={customCompare} disabled={running !== null}>
-            {running === 'custom' ? <Loader2 className="animate-spin" /> : <GitCompareArrows />} Compare controllers on current workspace scenario
+            {running === 'custom' ? <Loader2 className="animate-spin" /> : <GitCompareArrows />} Порівняти регулятори на поточному сценарії
           </Button>
         }
       />
-      {error ? <EmptyState title="Cannot load presets" icon={<FlaskConical />}>{error}</EmptyState> : null}
-      {!presets && !error ? <EmptyState title="Loading presets…" icon={<Loader2 className="animate-spin" />} /> : null}
+      {error ? <EmptyState title="Не вдалося завантажити пресети" icon={<FlaskConical />}>{error}</EmptyState> : null}
+      {!presets && !error ? <EmptyState title="Завантаження пресетів…" icon={<Loader2 className="animate-spin" />} /> : null}
       <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         {presets?.map((p) => (
           <Section
@@ -102,34 +103,34 @@ export function ExperimentsPage() {
               <p className="text-xs leading-relaxed">{p.description}</p>
               <KeyValue
                 items={[
-                  ['Pipeline', p.config.pipeline.name],
-                  ['Segments', String(p.config.pipeline.segments.length)],
-                  ['Initial offset / heading', `${fmt.mm(p.config.initial.lateral_offset, 0)} / ${fmt.deg(p.config.initial.heading_error)}`],
-                  ['Cruise speed', fmt.mps(p.config.reference.cruise_speed, 2)],
-                  ['Wheel-radius mismatch', fmt.pct(p.config.disturbances.wheel_radius_mismatch)],
-                  ['Sensor noise σ (pos / heading)', `${fmt.mm(p.config.robot.sensor_noise.position_std)} / ${fmt.deg(p.config.robot.sensor_noise.heading_std)}`],
-                  ['Seed / Δt', `${p.config.seed} / ${p.config.time_step * 1000} ms`],
-                  ['Controllers', p.controllers.map((c) => CONTROLLER_SHORT[c.type]).join(', ')],
+                  ['Трубопровід', p.config.pipeline.name],
+                  ['Сегменти', String(p.config.pipeline.segments.length)],
+                  ['Початкове зміщення / курс', `${fmt.mm(p.config.initial.lateral_offset, 0)} / ${fmt.deg(p.config.initial.heading_error)}`],
+                  ['Крейсерська швидкість', fmt.mps(p.config.reference.cruise_speed, 2)],
+                  ['Похибка радіуса колеса', fmt.pct(p.config.disturbances.wheel_radius_mismatch)],
+                  ['Шум сенсорів σ (положення / курс)', `${fmt.mm(p.config.robot.sensor_noise.position_std)} / ${fmt.deg(p.config.robot.sensor_noise.heading_std)}`],
+                  ['Зерно / Δt', `${p.config.seed} / ${p.config.time_step * 1000} мс`],
+                  ['Регулятори', p.controllers.map((c) => CONTROLLER_SHORT[c.type]).join(', ')],
                 ]}
               />
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => void runComparison(p)} disabled={running !== null}>
                   {running === p.id ? <Loader2 className="animate-spin" /> : <GitCompareArrows />}
-                  {p.controllers.length > 1 ? 'Run comparison' : 'Run'}
+                  {p.controllers.length > 1 ? 'Запустити порівняння' : 'Запустити'}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => void analyze(p)} disabled={running !== null}>
-                  {running === `${p.id}-a` ? <Loader2 className="animate-spin" /> : <ScanSearch />} Static analysis
+                  {running === `${p.id}-a` ? <Loader2 className="animate-spin" /> : <ScanSearch />} Статичний аналіз
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => {
                     loadScenario(p.config, p.controllers)
-                    toast.success(`Loaded experiment ${p.code} into the workspace`)
+                    toast.success(`Експеримент ${p.code} завантажено в робочу область`)
                     navigate('/simulation')
                   }}
                 >
-                  <Upload /> Load into workspace
+                  <Upload /> Завантажити в робочу область
                 </Button>
               </div>
             </div>
@@ -140,9 +141,9 @@ export function ExperimentsPage() {
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
-              Static analysis – {analysis?.preset.code} {analysis?.preset.title}
+              Статичний аналіз – {analysis?.preset.code} {analysis?.preset.title}
             </DialogTitle>
-            <DialogDescription>Centred, aligned robot evaluated along the whole pipe before any simulation.</DialogDescription>
+            <DialogDescription>Відцентрований і вирівняний робот оцінюється вздовж усієї труби до будь-якого моделювання.</DialogDescription>
           </DialogHeader>
           {analysis ? (
             <div className="space-y-3">

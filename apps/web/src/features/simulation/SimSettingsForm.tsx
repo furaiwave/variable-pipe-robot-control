@@ -11,30 +11,30 @@ type NumKey = Exclude<keyof SimSettingsValues, 'stop_on_collision'>
 
 const GROUPS: { title: string; fields: { key: NumKey; label: string; unit?: string; step?: number; hint?: string }[] }[] = [
   {
-    title: 'Reference trajectory (identical for all controllers)',
+    title: 'Опорна траєкторія (однакова для всіх регуляторів)',
     fields: [
-      { key: 'cruise_speed', label: 'Cruise speed', unit: 'm/s', step: 0.01 },
-      { key: 'max_acceleration', label: 'Reference acceleration', unit: 'm/s²', step: 0.05 },
-      { key: 'bend_speed_factor', label: 'Bend speed factor', step: 0.05, hint: 'v ≤ factor · ω_max / |κ|' },
-      { key: 'reference_offset_mm', label: 'Lateral offset of path', unit: 'mm', step: 1 },
+      { key: 'cruise_speed', label: 'Крейсерська швидкість', unit: 'м/с', step: 0.01 },
+      { key: 'max_acceleration', label: 'Прискорення опорного руху', unit: 'м/с²', step: 0.05 },
+      { key: 'bend_speed_factor', label: 'Коефіцієнт швидкості у вигинах', step: 0.05, hint: 'v ≤ коеф. · ω_max / |κ|' },
+      { key: 'reference_offset_mm', label: 'Бічне зміщення траєкторії', unit: 'мм', step: 1 },
     ],
   },
   {
-    title: 'Initial conditions and disturbances',
+    title: 'Початкові умови та збурення',
     fields: [
-      { key: 'initial_offset_mm', label: 'Initial lateral offset', unit: 'mm', step: 1 },
-      { key: 'initial_heading_deg', label: 'Initial heading error', unit: '°', step: 0.5 },
-      { key: 'wheel_mismatch_pct', label: 'Right wheel radius error', unit: '%', step: 0.5, hint: 'Unmodelled by the controllers' },
-      { key: 'seed', label: 'Random seed (sensor noise)', step: 1 },
+      { key: 'initial_offset_mm', label: 'Початкове бічне зміщення', unit: 'мм', step: 1 },
+      { key: 'initial_heading_deg', label: 'Початкова похибка курсу', unit: '°', step: 0.5 },
+      { key: 'wheel_mismatch_pct', label: 'Похибка радіуса правого колеса', unit: '%', step: 0.5, hint: 'Не враховується регуляторами' },
+      { key: 'seed', label: 'Зерно генератора (шум сенсорів)', step: 1 },
     ],
   },
   {
-    title: 'Numerics and constraints',
+    title: 'Чисельні параметри та обмеження',
     fields: [
-      { key: 'time_step_ms', label: 'Fixed time step Δt', unit: 'ms', step: 0.5 },
-      { key: 'telemetry_interval_ms', label: 'Telemetry interval', unit: 'ms', step: 5 },
-      { key: 'max_duration', label: 'Max. simulated time', unit: 's', step: 5 },
-      { key: 'safety_margin_mm', label: 'Required safety clearance', unit: 'mm', step: 0.5 },
+      { key: 'time_step_ms', label: 'Фіксований крок Δt', unit: 'мс', step: 0.5 },
+      { key: 'telemetry_interval_ms', label: 'Інтервал телеметрії', unit: 'мс', step: 5 },
+      { key: 'max_duration', label: 'Макс. модельний час', unit: 'с', step: 5 },
+      { key: 'safety_margin_mm', label: 'Необхідний безпечний зазор', unit: 'мм', step: 0.5 },
     ],
   },
 ]
@@ -60,7 +60,7 @@ export function SimSettingsForm({ config, onCommit }: { config: SimulationConfig
   }, [watch, trigger, getValues])
 
   return (
-    <form className="space-y-3" onSubmit={(e) => e.preventDefault()} aria-label="Simulation settings" noValidate>
+    <form className="space-y-3" onSubmit={(e) => e.preventDefault()} aria-label="Налаштування моделювання" noValidate>
       {GROUPS.map((g) => (
         <fieldset key={g.title} className="space-y-1.5">
           <legend className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{g.title}</legend>
@@ -87,7 +87,7 @@ export function SimSettingsForm({ config, onCommit }: { config: SimulationConfig
           onCheckedChange={(v) => setValue('stop_on_collision', v, { shouldDirty: true, shouldValidate: true })}
         />
         <Label htmlFor="sim-stop" className="text-xs">
-          Stop at the first collision (otherwise collisions are counted and the run continues)
+          Зупиняти при першому зіткненні (інакше зіткнення підраховуються, а запуск триває)
         </Label>
       </div>
     </form>

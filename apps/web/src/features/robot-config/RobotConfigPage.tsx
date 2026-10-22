@@ -19,7 +19,7 @@ export function RobotConfigPage() {
   const onDraft = useCallback((r: RobotConfig | null) => setDraft(r), [])
   const { report } = useFeasibility(config)
 
-  if (!config) return <EmptyState title="Loading configuration…" icon={<Loader2 className="animate-spin" />} />
+  if (!config) return <EmptyState title="Завантаження конфігурації…" icon={<Loader2 className="animate-spin" />} />
   const preview = draft ?? config.robot
 
   const apply = async (robot: RobotConfig) => {
@@ -27,12 +27,12 @@ export function RobotConfigPage() {
       const res = await api.validateConfig({ ...config, robot })
       const robotIssues = res.issues.filter((i) => i.field.startsWith('robot.'))
       if (robotIssues.length) {
-        toast.error('The engine rejected the robot parameters')
+        toast.error('Рушій відхилив параметри робота')
         return robotIssues
       }
       setRobot(robot)
-      toast.success('Robot parameters applied')
-      if (!res.valid) toast.warning(`Scenario has other issues: ${res.issues[0]?.field}: ${res.issues[0]?.message}`)
+      toast.success('Параметри робота застосовано')
+      if (!res.valid) toast.warning(`Сценарій має інші проблеми: ${res.issues[0]?.field}: ${res.issues[0]?.message}`)
       return []
     } catch (e) {
       toast.error(e instanceof ApiError ? e.describe() : String(e))
@@ -44,38 +44,38 @@ export function RobotConfigPage() {
   const n = r.wheel_count / 2
   return (
     <div className="space-y-4">
-      <PageHeader title="Robot configuration" description="Mechanical and motion parameters of the wheeled (skid-steer) inspection robot." />
+      <PageHeader title="Конфігурація робота" description="Механічні параметри та параметри руху колісного інспекційного робота з бортовим керуванням." />
       <Alert>
         <Info />
-        <AlertTitle>Illustrative parameters</AlertTitle>
+        <AlertTitle>Ілюстративні параметри</AlertTitle>
         <AlertDescription>
-          The default values describe a hypothetical small inspection robot for 200–300 mm pipes. They are modelling assumptions, not measured
-          specifications of real hardware.
+          Типові значення описують гіпотетичного малого інспекційного робота для труб 200–300 мм. Це припущення моделі, а не виміряні
+          характеристики реального обладнання.
         </AlertDescription>
       </Alert>
       <div className="grid gap-4 xl:grid-cols-[1fr_420px]">
-        <Section title="Parameters" source="config" description="All values are validated here and again by the Rust engine before they are applied.">
+        <Section title="Параметри" source="config" description="Усі значення перевіряються тут і повторно Rust-рушієм перед застосуванням.">
           <RobotForm robot={config.robot} onApply={apply} onDraft={onDraft} />
         </Section>
         <div className="space-y-4">
-          <Section title="Schematic (top view)" source="config" description={draft ? 'Preview of the unapplied draft' : 'Applied configuration'}>
+          <Section title="Схема (вид зверху)" source="config" description={draft ? 'Попередній перегляд незастосованої чернетки' : 'Застосована конфігурація'}>
             <RobotSchematic robot={r} />
           </Section>
-          <Section title="Derived properties" source="calc">
+          <Section title="Похідні характеристики" source="calc">
             <KeyValue
               items={[
-                ['Envelope L × W × H', `${fmt.mm(Math.max(r.body_length, r.wheelbase + 2 * r.wheel_radius), 0)} × ${fmt.mm(Math.max(r.body_width, r.track_width + r.wheel_width), 0)} × ${fmt.mm(Math.max(r.chassis_clearance + r.body_height, 2 * r.wheel_radius), 0)}`],
-                ['Axles / spacing', `${n} / ${fmt.mm(r.wheelbase / Math.max(1, n - 1), 0)}`],
-                ['Wheel contact half-span (outer tread edge)', fmt.mm((r.track_width + r.wheel_width) / 2)],
-                ['Max. speed from wheel limit (r·ω_max)', fmt.mps(r.wheel_radius * r.max_wheel_speed)],
-                ['Total drive force limit (n·τ/r)', `${((r.wheel_count * r.max_motor_torque) / r.wheel_radius).toFixed(2)} N`],
-                ['Weight', `${(r.mass * 9.80665).toFixed(2)} N`],
+                ['Габарит Д × Ш × В', `${fmt.mm(Math.max(r.body_length, r.wheelbase + 2 * r.wheel_radius), 0)} × ${fmt.mm(Math.max(r.body_width, r.track_width + r.wheel_width), 0)} × ${fmt.mm(Math.max(r.chassis_clearance + r.body_height, 2 * r.wheel_radius), 0)}`],
+                ['Осі / відстань між ними', `${n} / ${fmt.mm(r.wheelbase / Math.max(1, n - 1), 0)}`],
+                ['Напівширина зони контакту коліс (зовн. край протектора)', fmt.mm((r.track_width + r.wheel_width) / 2)],
+                ['Макс. швидкість за обмеженням колеса (r·ω_max)', fmt.mps(r.wheel_radius * r.max_wheel_speed)],
+                ['Сумарна межа тягової сили (n·τ/r)', `${((r.wheel_count * r.max_motor_torque) / r.wheel_radius).toFixed(2)} Н`],
+                ['Вага', `${(r.mass * 9.80665).toFixed(2)} Н`],
                 ...(report && !draft
                   ? ([
-                      ['Max. climbable step (front axle)', fmt.mm(report.max_step_height)],
-                      ['Max. climbable slope', fmt.deg(report.slope_limit.max_slope)],
-                      ['Geometric min. pipe diameter', report.min_feasible_diameter ? fmt.mm(report.min_feasible_diameter.geometric) : '—'],
-                      ['Recommended min. pipe diameter', report.min_feasible_diameter ? fmt.mm(report.min_feasible_diameter.recommended) : '—'],
+                      ['Макс. висота сходинки (передня вісь)', fmt.mm(report.max_step_height)],
+                      ['Макс. нахил, що долається', fmt.deg(report.slope_limit.max_slope)],
+                      ['Геометричний мін. діаметр труби', report.min_feasible_diameter ? fmt.mm(report.min_feasible_diameter.geometric) : '—'],
+                      ['Рекомендований мін. діаметр труби', report.min_feasible_diameter ? fmt.mm(report.min_feasible_diameter.recommended) : '—'],
                     ] as [string, string][])
                   : []),
               ]}
@@ -84,9 +84,9 @@ export function RobotConfigPage() {
         </div>
       </div>
       <Section
-        title="Cross-section in a circular pipe"
+        title="Поперечний переріз у круглій трубі"
         source="calc"
-        description="Quasi-3D placement used by the clearance checks: wheels rest on the wall, the chassis plane is fitted through the contacts (rigid body, no suspension)."
+        description="Квазі-3D розміщення, що використовується для перевірки зазорів: колеса спираються на стінку, площина шасі проводиться через точки контакту (жорстке тіло без підвіски)."
       >
         <CrossSection robot={preview} safetyMargin={config.safety_margin} />
       </Section>

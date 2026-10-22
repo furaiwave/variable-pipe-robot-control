@@ -20,18 +20,18 @@ export const FLAG_CONTROLLER_SATURATED = 1 << 16
 export const FLAG_RATE_LIMITED = 1 << 17
 
 export const VIOLATION_LABELS: Record<ViolationKind, string> = {
-  collision: 'Collision with pipe wall',
-  safety_clearance: 'Safety clearance violated',
-  contact_angle: 'Wall contact angle exceeded',
-  wheel_outside_pipe: 'Wheel outside pipe cross-section',
-  step_not_climbable: 'Step / ramp not climbable',
-  wheel_speed_saturation: 'Wheel speed saturation',
-  torque_saturation: 'Motor torque saturation',
-  traction_limit: 'Traction limit (wheel slip)',
-  tipping_risk: 'Axle lift-off (tipping risk)',
-  stall: 'Stall (no progress)',
-  numerical_failure: 'Numerical failure',
-  timeout: 'Time limit reached',
+  collision: 'Зіткнення зі стінкою труби',
+  safety_clearance: 'Порушено безпечний зазор',
+  contact_angle: 'Перевищено кут контакту зі стінкою',
+  wheel_outside_pipe: 'Колесо поза перерізом труби',
+  step_not_climbable: 'Сходинку / рампу неможливо подолати',
+  wheel_speed_saturation: 'Насичення швидкості коліс',
+  torque_saturation: 'Насичення моменту двигуна',
+  traction_limit: 'Межа зчеплення (пробуксовка)',
+  tipping_risk: 'Відрив осі (ризик перекидання)',
+  stall: 'Зупинка (немає просування)',
+  numerical_failure: 'Чисельний збій',
+  timeout: 'Вичерпано ліміт часу',
 }
 
 export function violationFlag(kind: ViolationKind): number {
@@ -43,24 +43,39 @@ export function activeViolations(flags: number): ViolationKind[] {
 }
 
 export const CONTROLLER_NAMES: Record<ControllerType, string> = {
-  kinematic: 'Kinematic baseline (Kanayama)',
-  pid: 'PID tracking (fixed gains)',
-  gain_scheduled: 'Gain-scheduled PID',
+  kinematic: 'Кінематичний базовий (Kanayama)',
+  pid: 'ПІД-стеження (фіксовані коефіцієнти)',
+  gain_scheduled: 'ПІД з плануванням коефіцієнтів',
 }
 
 export const CONTROLLER_SHORT: Record<ControllerType, string> = {
-  kinematic: 'Kinematic',
-  pid: 'PID',
-  gain_scheduled: 'Gain-scheduled',
+  kinematic: 'Кінематичний',
+  pid: 'ПІД',
+  gain_scheduled: 'ПІД з плануванням',
 }
 
 export const STATUS_LABELS: Record<SimulationStatus, string> = {
-  ready: 'Ready',
-  running: 'Running',
-  paused: 'Paused',
-  completed: 'Completed',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
+  ready: 'Готово до запуску',
+  running: 'Виконується',
+  paused: 'Призупинено',
+  completed: 'Завершено',
+  failed: 'Збій',
+  cancelled: 'Скасовано',
+}
+
+/** Ukrainian names of the binding constraints reported by the engine. */
+const BINDING_LABELS: Record<string, string> = {
+  'wheel contact outside cross-section': 'контакт колеса поза перерізом',
+  'wall contact angle limit': 'межа кута контакту зі стінкою',
+  'body top clearance': 'зазор над корпусом',
+  'body underside clearance': 'зазор під днищем',
+  'wheel clearance': 'зазор колеса',
+  'minimum supported diameter': 'мінімальний підтримуваний діаметр',
+  unknown: 'невідомо',
+}
+
+export function bindingLabel(binding: string): string {
+  return BINDING_LABELS[binding] ?? binding
 }
 
 export function isTerminal(s: SimulationStatus | null | undefined): boolean {

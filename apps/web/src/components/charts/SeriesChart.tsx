@@ -62,7 +62,7 @@ export const SeriesChart = memo(function SeriesChart({
   syncId,
 }: SeriesChartProps) {
   return (
-    <div style={{ height }} className="w-full text-xs" role="img" aria-label={`${yLabel} versus ${xLabel}`}>
+    <div style={{ height }} className="w-full text-xs" role="img" aria-label={`${yLabel} залежно від ${xLabel}`}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 6, right: 12, bottom: 16, left: 4 }} syncId={syncId}>
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />

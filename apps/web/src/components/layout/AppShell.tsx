@@ -23,13 +23,13 @@ import { useSimStore } from '@/stores/sim-store'
 import { useThemeStore } from '@/stores/theme-store'
 
 const NAV = [
-  { to: '/', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/pipeline', label: 'Pipeline editor', icon: Waypoints },
-  { to: '/robot', label: 'Robot', icon: Bot },
-  { to: '/controllers', label: 'Controllers', icon: SlidersHorizontal },
-  { to: '/simulation', label: 'Simulation', icon: Play },
-  { to: '/results', label: 'Results', icon: ChartLine },
-  { to: '/experiments', label: 'Experiments', icon: FlaskConical },
+  { to: '/', label: 'Огляд', icon: LayoutDashboard, end: true },
+  { to: '/pipeline', label: 'Редактор трубопроводу', icon: Waypoints },
+  { to: '/robot', label: 'Робот', icon: Bot },
+  { to: '/controllers', label: 'Регулятори', icon: SlidersHorizontal },
+  { to: '/simulation', label: 'Моделювання', icon: Play },
+  { to: '/results', label: 'Результати', icon: ChartLine },
+  { to: '/experiments', label: 'Експерименти', icon: FlaskConical },
 ]
 
 export function AppShell() {
@@ -50,10 +50,10 @@ export function AppShell() {
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold">PipeBot Control</div>
-            <div className="text-[10px] text-muted-foreground">variable-section pipeline sim</div>
+            <div className="text-[10px] text-muted-foreground">трубопровід зі змінним перерізом</div>
           </div>
         </div>
-        <nav aria-label="Main" className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col md:overflow-visible">
+        <nav aria-label="Головне меню" className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col md:overflow-visible">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -72,7 +72,7 @@ export function AppShell() {
           ))}
         </nav>
         <div className="hidden px-4 pt-4 text-[10px] leading-relaxed text-muted-foreground md:block">
-          Results are produced by a planar kinematic / quasi-static simulation model. They are not physical measurements.
+          Результати отримано за планарною кінематичною / квазістатичною моделлю. Це не фізичні вимірювання.
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -86,12 +86,12 @@ export function AppShell() {
               aria-hidden
             />
             <span className="text-muted-foreground">
-              {health.online === null ? 'Connecting to engine…' : health.online ? `Engine online · ${health.version}` : 'Engine offline'}
+              {health.online === null ? 'Підключення до рушія…' : health.online ? `Рушій доступний · ${health.version}` : 'Рушій недоступний'}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge status={status} />
-            <Button size="icon-sm" variant="ghost" aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} onClick={toggle}>
+            <Button size="icon-sm" variant="ghost" aria-label={theme === 'dark' ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'} onClick={toggle}>
               {theme === 'dark' ? <Sun /> : <Moon />}
             </Button>
           </div>
@@ -100,19 +100,19 @@ export function AppShell() {
           {loadStatus === 'error' ? (
             <Alert variant="destructive">
               <ServerCrash />
-              <AlertTitle>Cannot load the configuration from the simulation engine</AlertTitle>
+              <AlertTitle>Не вдалося завантажити конфігурацію з рушія моделювання</AlertTitle>
               <AlertDescription>
                 <p>{loadError}</p>
                 <p className="mt-1">
-                  Start the Rust API with <code className="rounded bg-muted px-1">cargo run -p api-server</code> (port 8080) and retry.
+                  Запустіть Rust API командою <code className="rounded bg-muted px-1">cargo run -p api-server</code> (порт 8080) і повторіть спробу.
                 </p>
                 <Button size="sm" variant="outline" className="mt-2" onClick={() => void init(true)}>
-                  <RefreshCw /> Retry
+                  <RefreshCw /> Повторити
                 </Button>
               </AlertDescription>
             </Alert>
           ) : null}
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Завантаження…</p>}>
             <Outlet />
           </Suspense>
         </main>

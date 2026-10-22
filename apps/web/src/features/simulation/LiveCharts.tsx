@@ -23,39 +23,39 @@ export function LiveCharts() {
       <SeriesChart
         data={data}
         x="t"
-        xLabel="t [s]"
-        yLabel="error [mm]"
+        xLabel="t [с]"
+        yLabel="похибка [мм]"
         height={180}
         digits={1}
         syncId="live"
         series={[
-          { key: 'lat', label: 'Cross-track', color: chartColors.c1 },
-          { key: 'pos', label: 'Position', color: chartColors.c2 },
+          { key: 'lat', label: 'Поперечна', color: chartColors.c1 },
+          { key: 'pos', label: 'Положення', color: chartColors.c2 },
         ]}
       />
       <SeriesChart
         data={data}
         x="t"
-        xLabel="t [s]"
-        yLabel="v [m/s]"
+        xLabel="t [с]"
+        yLabel="v [м/с]"
         height={180}
         syncId="live"
         series={[
-          { key: 'v', label: 'Actual', color: chartColors.c3 },
-          { key: 'vref', label: 'Reference', color: chartColors.muted, dashed: true },
+          { key: 'v', label: 'Фактична', color: chartColors.c3 },
+          { key: 'vref', label: 'Опорна', color: chartColors.muted, dashed: true },
         ]}
       />
       <SeriesChart
         data={data}
         x="t"
-        xLabel="t [s]"
-        yLabel="clearance [mm]"
+        xLabel="t [с]"
+        yLabel="зазор [мм]"
         height={180}
         digits={1}
         syncId="live"
         series={[
-          { key: 'clr', label: 'Min. clearance', color: chartColors.c4 },
-          { key: 'req', label: 'Required', color: chartColors.warning, dashed: true },
+          { key: 'clr', label: 'Мін. зазор', color: chartColors.c4 },
+          { key: 'req', label: 'Необхідний', color: chartColors.warning, dashed: true },
         ]}
       />
     </div>

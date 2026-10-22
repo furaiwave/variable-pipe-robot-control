@@ -89,7 +89,7 @@ export function PipeCanvas({
   showReference = true,
   follow = false,
   className,
-  ariaLabel = 'Pipeline plan view',
+  ariaLabel = 'План трубопроводу',
 }: PipeCanvasProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -360,9 +360,9 @@ export function PipeCanvas({
       const g0 = geometry[0]!
       ctx.fillStyle = colMuted
       ctx.font = '11px ui-sans-serif, system-ui'
-      ctx.fillText('inlet', sx(g0.x) - 10, sy(g0.y) - (g0.diameter / 2) * v.scale - 6)
+      ctx.fillText('вхід', sx(g0.x) - 10, sy(g0.y) - (g0.diameter / 2) * v.scale - 6)
       const gN = geometry[geometry.length - 1]!
-      ctx.fillText('outlet', sx(gN.x) - 14, sy(gN.y) - (gN.diameter / 2) * v.scale - 6)
+      ctx.fillText('вихід', sx(gN.x) - 14, sy(gN.y) - (gN.diameter / 2) * v.scale - 6)
 
       // Scale bar
       const target = 120 / v.scale
@@ -380,7 +380,7 @@ export function PipeCanvas({
       ctx.lineTo(12 + px, size.h - 10)
       ctx.stroke()
       ctx.fillStyle = colFg
-      ctx.fillText(nice >= 1 ? `${nice} m` : `${Math.round(nice * 1000)} mm`, 16 + px, size.h - 10)
+      ctx.fillText(nice >= 1 ? `${nice} м` : `${Math.round(nice * 1000)} мм`, 16 + px, size.h - 10)
     },
     [geometry, robot, pose, tracks, issues, steps, selectedSegment, showReference, size, follow],
   )
@@ -470,18 +470,18 @@ export function PipeCanvas({
         onDoubleClick={() => setView(fitView())}
       />
       <div className="absolute top-2 right-2 flex gap-1">
-        <Button size="icon-sm" variant="secondary" aria-label="Zoom in" onClick={() => zoom(1.3)}>
+        <Button size="icon-sm" variant="secondary" aria-label="Збільшити" onClick={() => zoom(1.3)}>
           <Plus />
         </Button>
-        <Button size="icon-sm" variant="secondary" aria-label="Zoom out" onClick={() => zoom(1 / 1.3)}>
+        <Button size="icon-sm" variant="secondary" aria-label="Зменшити" onClick={() => zoom(1 / 1.3)}>
           <Minus />
         </Button>
-        <Button size="icon-sm" variant="secondary" aria-label="Fit to view" onClick={() => setView(fitView())}>
+        <Button size="icon-sm" variant="secondary" aria-label="Вмістити у вікно" onClick={() => setView(fitView())}>
           <Maximize2 />
         </Button>
         {follow ? (
           <span className="flex items-center gap-1 rounded bg-secondary px-2 text-xs text-secondary-foreground">
-            <Crosshair className="size-3" /> following
+            <Crosshair className="size-3" /> стеження
           </span>
         ) : null}
       </div>

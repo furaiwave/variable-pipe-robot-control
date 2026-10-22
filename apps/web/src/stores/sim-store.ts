@@ -94,7 +94,7 @@ export const useSimStore = create<SimState>()((set, get) => {
     api
       .results(simId)
       .then((r) => useResultsStore.getState().addRun(r, 'live', simId))
-      .catch((e) => set({ error: `Could not fetch results: ${message(e)}` }))
+      .catch((e) => set({ error: `Не вдалося отримати результати: ${message(e)}` }))
   }
 
   function connect(id: string) {

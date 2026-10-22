@@ -19,10 +19,10 @@ describe('RobotForm', () => {
     const user = userEvent.setup()
     const onApply = vi.fn<(r: RobotConfig) => []>(() => [])
     wrap(<RobotForm robot={defaultConfig().robot} onApply={onApply} />)
-    const radius = screen.getByLabelText(/Wheel radius r/)
+    const radius = screen.getByLabelText(/Радіус колеса r/)
     await user.clear(radius)
     await user.type(radius, '35')
-    await user.click(screen.getByRole('button', { name: /Apply robot parameters/ }))
+    await user.click(screen.getByRole('button', { name: /Застосувати параметри робота/ }))
     await waitFor(() => expect(onApply).toHaveBeenCalledTimes(1))
     expect(onApply.mock.calls[0]![0].wheel_radius).toBeCloseTo(0.035, 12)
   })
@@ -31,11 +31,11 @@ describe('RobotForm', () => {
     const user = userEvent.setup()
     const onApply = vi.fn(() => [])
     wrap(<RobotForm robot={defaultConfig().robot} onApply={onApply} />)
-    const mass = screen.getByLabelText(/^Mass/)
+    const mass = screen.getByLabelText(/^Маса/)
     await user.clear(mass)
     await user.type(mass, '-3')
-    await user.click(screen.getByRole('button', { name: /Apply robot parameters/ }))
-    expect(await screen.findByText(/Must be ≥ 0.05/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Застосувати параметри робота/ }))
+    expect(await screen.findByText(/Має бути ≥ 0.05/)).toBeInTheDocument()
     expect(onApply).not.toHaveBeenCalled()
   })
 
@@ -43,7 +43,7 @@ describe('RobotForm', () => {
     const user = userEvent.setup()
     const onApply = vi.fn(async () => [{ field: 'robot.wheelbase', message: 'rejected by engine' }])
     wrap(<RobotForm robot={defaultConfig().robot} onApply={onApply} />)
-    await user.click(screen.getByRole('button', { name: /Apply robot parameters/ }))
+    await user.click(screen.getByRole('button', { name: /Застосувати параметри робота/ }))
     expect(await screen.findByText('rejected by engine')).toBeInTheDocument()
   })
 })
@@ -54,8 +54,8 @@ describe('SegmentForm', () => {
   it('commits valid edits (debounced) converted to SI', async () => {
     const onCommit = vi.fn()
     wrap(<SegmentForm segment={seg} otherIds={['s1']} station={1.3} onCommit={onCommit} debounceMs={5} />)
-    expect(screen.getByText('1.300 m')).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText(/Internal diameter/), { target: { value: '180' } })
+    expect(screen.getByText('1.300 м')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Внутрішній діаметр/), { target: { value: '180' } })
     await waitFor(() => expect(onCommit).toHaveBeenCalled())
     const committed = onCommit.mock.calls.at(-1)![0] as Segment
     expect(committed.kind === 'straight' && committed.diameter).toBeCloseTo(0.18, 12)
@@ -64,11 +64,11 @@ describe('SegmentForm', () => {
   it('does not commit invalid values and reports duplicate IDs', async () => {
     const onCommit = vi.fn()
     wrap(<SegmentForm segment={seg} otherIds={['s1']} station={null} onCommit={onCommit} debounceMs={5} />)
-    fireEvent.change(screen.getByLabelText(/Internal diameter/), { target: { value: '5' } })
-    expect(await screen.findByText(/Must be ≥ 20/)).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText(/Internal diameter/), { target: { value: '200' } })
-    fireEvent.change(screen.getByLabelText('Segment ID'), { target: { value: 's1' } })
-    expect(await screen.findByText(/already used/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Внутрішній діаметр/), { target: { value: '5' } })
+    expect(await screen.findByText(/Має бути ≥ 20/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Внутрішній діаметр/), { target: { value: '200' } })
+    fireEvent.change(screen.getByLabelText('Ідентифікатор сегмента'), { target: { value: 's1' } })
+    expect(await screen.findByText(/уже використано/)).toBeInTheDocument()
     expect(onCommit).not.toHaveBeenCalled()
   })
 
@@ -76,7 +76,7 @@ describe('SegmentForm', () => {
     const user = userEvent.setup()
     const onCommit = vi.fn()
     wrap(<SegmentForm segment={seg} otherIds={[]} station={null} onCommit={onCommit} debounceMs={5} />)
-    await user.click(screen.getByRole('button', { name: /Add/ }))
+    await user.click(screen.getByRole('button', { name: /Додати/ }))
     await waitFor(() => expect(onCommit).toHaveBeenCalled())
     const committed = onCommit.mock.calls.at(-1)![0] as Segment
     expect(committed.restrictions).toHaveLength(1)
@@ -107,23 +107,23 @@ describe('simulation state display', () => {
 
   it('shows the right buttons for each state', () => {
     controls('running')
-    expect(screen.getByRole('button', { name: /Pause/ })).toBeEnabled()
-    expect(screen.queryByRole('button', { name: /^Start/ })).not.toBeInTheDocument()
-    expect(screen.getByTestId('status-badge')).toHaveTextContent('Running')
+    expect(screen.getByRole('button', { name: /Пауза/ })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: /^Старт/ })).not.toBeInTheDocument()
+    expect(screen.getByTestId('status-badge')).toHaveTextContent('Виконується')
   })
 
   it('offers resume when paused and restart when finished', () => {
     const { unmount } = controls('paused')
-    expect(screen.getByRole('button', { name: /Resume/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /Продовжити/ })).toBeEnabled()
     unmount()
     controls('completed')
-    expect(screen.getByRole('button', { name: /Restart/ })).toBeEnabled()
-    expect(screen.getByRole('button', { name: /Stop/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Перезапустити/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /Зупинити/ })).toBeDisabled()
   })
 
   it('StatusBadge handles a missing simulation', () => {
     render(<StatusBadge status={null} />)
-    expect(screen.getByText('No simulation')).toBeInTheDocument()
+    expect(screen.getByText('Немає моделювання')).toBeInTheDocument()
   })
 
   it('reports the failure reason, position and events', () => {
@@ -137,21 +137,21 @@ describe('simulation state display', () => {
       />,
     )
     const alert = screen.getByTestId('failure-alert')
-    expect(within(alert).getByText(/Step \/ ramp not climbable/)).toBeInTheDocument()
-    expect(within(alert).getByText(/s = 1.419 m/)).toBeInTheDocument()
-    expect(screen.getByText(/Safety clearance violated/)).toBeInTheDocument()
+    expect(within(alert).getByText(/Сходинку \/ рампу неможливо подолати/)).toBeInTheDocument()
+    expect(within(alert).getByText(/s = 1.419 м/)).toBeInTheDocument()
+    expect(screen.getByText(/Порушено безпечний зазор/)).toBeInTheDocument()
   })
 })
 
 describe('results rendering', () => {
   it('renders all required metrics', () => {
     render(<MetricsTable metrics={metrics({ collision_count: 2 })} robot={defaultConfig().robot} />)
-    const table = screen.getByRole('table', { name: 'Performance metrics' })
-    for (const label of ['Position error RMSE', 'Position error MAE', 'Position error max |e|', 'Final position error', 'Average linear velocity', 'Max. wheel speed', 'Total simulated distance', 'Collisions', 'Simulated duration']) {
+    const table = screen.getByRole('table', { name: 'Показники якості' })
+    for (const label of ['СКВ похибки положення', 'Середня абсолютна похибка положення', 'Макс. похибка положення |e|', 'Кінцева похибка положення', 'Середня лінійна швидкість', 'Макс. швидкість колеса', 'Загальна пройдена відстань', 'Зіткнення', 'Тривалість моделювання']) {
       expect(within(table).getByText(label)).toBeInTheDocument()
     }
-    expect(within(table).getByText('2.10 mm')).toBeInTheDocument()
-    const row = within(table).getByText('Collisions').closest('tr')!
+    expect(within(table).getByText('2.10 мм')).toBeInTheDocument()
+    const row = within(table).getByText('Зіткнення').closest('tr')!
     expect(within(row).getByText('2')).toBeInTheDocument()
   })
 

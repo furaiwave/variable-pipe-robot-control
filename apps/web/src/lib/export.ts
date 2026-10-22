@@ -38,7 +38,7 @@ export function resultsToJson(results: SimulationResults, now = new Date()): str
     format: 'variable-pipe-robot-control/experiment',
     version: 1,
     exported_at: now.toISOString(),
-    note: 'Simulation results of a planar kinematic/quasi-static model — not physical measurements. Re-run `config` with the same engine version to reproduce.',
+    note: 'Результати моделювання планарної кінематичної / квазістатичної моделі — не фізичні вимірювання. Для відтворення повторно запустіть `config` з тією ж версією рушія.',
     results,
   }
   return JSON.stringify(doc, null, 2)
@@ -50,7 +50,7 @@ export function parseExperimentJson(text: string): SimulationResults {
   const obj = data as Partial<ExperimentExport> & Partial<SimulationResults>
   const results = (obj.format === 'variable-pipe-robot-control/experiment' ? obj.results : obj) as SimulationResults | undefined
   if (!results || !Array.isArray(results.telemetry) || typeof results.metrics !== 'object' || typeof results.config !== 'object') {
-    throw new Error('File does not contain simulation results (missing telemetry, metrics or config).')
+    throw new Error('Файл не містить результатів моделювання (відсутні телеметрія, метрики або конфігурація).')
   }
   return results
 }

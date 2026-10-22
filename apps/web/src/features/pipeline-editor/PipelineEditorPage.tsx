@@ -30,39 +30,39 @@ export function PipelineEditorPage() {
   const selected = selectedIdx >= 0 ? segments[selectedIdx] : undefined
   const otherIds = useMemo(() => segments.filter((s) => s.id !== selectedId).map((s) => s.id), [segments, selectedId])
 
-  if (!config) return <EmptyState title="Loading configuration…" icon={<Loader2 className="animate-spin" />} />
+  if (!config) return <EmptyState title="Завантаження конфігурації…" icon={<Loader2 className="animate-spin" />} />
 
   const summary = report?.summary
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Pipeline editor"
-        description="Compose the pipeline from connected segments. Geometry, clearance and feasibility are computed by the Rust engine."
+        title="Редактор трубопроводу"
+        description="Складіть трубопровід зі з’єднаних сегментів. Геометрію, зазори та проходимість розраховує Rust-рушій."
         actions={<FeasibilityVerdict report={stale ? null : report} loading={loading} />}
       />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard source="calc" label="Total length" value={summary ? fmt.m(summary.total_length, 2) : '—'} sub={`${segments.length} segments`} />
+        <StatCard source="calc" label="Загальна довжина" value={summary ? fmt.m(summary.total_length, 2) : '—'} sub={`сегментів: ${segments.length}`} />
         <StatCard
           source="calc"
-          label="Min. internal diameter"
+          label="Мін. внутрішній діаметр"
           value={summary ? fmt.mm(summary.min_diameter) : '—'}
-          sub={summary ? `at s = ${summary.min_diameter_station.toFixed(2)} m` : undefined}
+          sub={summary ? `при s = ${summary.min_diameter_station.toFixed(2)} м` : undefined}
         />
-        <StatCard source="calc" label="Bends" value={summary ? summary.bend_count : '—'} sub={summary ? `total ${(summary.total_turning_angle * RAD2DEG).toFixed(0)}°` : undefined} />
-        <StatCard source="calc" label="Elevation change" value={summary ? fmt.m(summary.elevation_change, 2) : '—'} sub={summary ? `max slope ${fmt.deg(summary.max_inclination)}` : undefined} />
+        <StatCard source="calc" label="Вигини" value={summary ? summary.bend_count : '—'} sub={summary ? `сумарно ${(summary.total_turning_angle * RAD2DEG).toFixed(0)}°` : undefined} />
+        <StatCard source="calc" label="Перепад висоти" value={summary ? fmt.m(summary.elevation_change, 2) : '—'} sub={summary ? `макс. нахил ${fmt.deg(summary.max_inclination)}` : undefined} />
         <StatCard
           source="calc"
-          label="Diameter steps"
+          label="Сходинки діаметра"
           value={report ? report.steps.length : '—'}
           tone={report && report.steps.some((s) => !s.climbable) ? 'danger' : undefined}
-          sub={report ? `${report.steps.filter((s) => !s.climbable).length} not climbable` : undefined}
+          sub={report ? `непрохідних: ${report.steps.filter((s) => !s.climbable).length}` : undefined}
         />
       </div>
 
       {error ? (
         <Alert variant="destructive">
           <AlertTriangle />
-          <AlertTitle>The engine rejected this pipeline</AlertTitle>
+          <AlertTitle>Рушій відхилив цей трубопровід</AlertTitle>
           <AlertDescription>
             <ul className="list-disc pl-4">
               {(error.details.length ? error.details.map((d) => `${d.field}: ${d.message}`) : [error.message]).map((m) => (
@@ -74,10 +74,10 @@ export function PipelineEditorPage() {
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[300px_1fr_340px]">
-        <Section title="Segments" description="Click a segment (list or drawing) to edit it.">
+        <Section title="Сегменти" description="Клацніть сегмент (у списку чи на схемі), щоб редагувати його.">
           <div className="mb-3 space-y-1">
             <Label htmlFor="pipe-name" className="text-xs">
-              Pipeline name
+              Назва трубопроводу
             </Label>
             <Input
               id="pipe-name"
@@ -99,9 +99,9 @@ export function PipelineEditorPage() {
         </Section>
 
         <Section
-          title="Plan view"
+          title="План"
           source="calc"
-          description="Centreline, effective walls, steps (○ climbable, ✕ not) and static issues (red/amber bands). Robot shown at its start pose. Scroll to zoom, drag to pan."
+          description="Осьова лінія, ефективні стінки, сходинки (○ прохідна, ✕ ні) та статичні проблеми (червоні/жовті смуги). Робот показаний у стартовому положенні. Колесо миші — масштаб, перетягування — зсув."
         >
           <PipeCanvas
             className="h-[460px]"
@@ -124,7 +124,7 @@ export function PipelineEditorPage() {
           />
         </Section>
 
-        <Section title={selected ? `Segment ${selectedIdx + 1}: ${selected.label || selected.id}` : 'Segment properties'} source="config">
+        <Section title={selected ? `Сегмент ${selectedIdx + 1}: ${selected.label || selected.id}` : 'Властивості сегмента'} source="config">
           {selected ? (
             <SegmentForm
               key={`${revision}-${selectedIdx}`}
@@ -134,17 +134,17 @@ export function PipelineEditorPage() {
               onCommit={(seg) => store().updateSegment(selected.id, seg)}
             />
           ) : (
-            <p className="text-xs text-muted-foreground">Select a segment.</p>
+            <p className="text-xs text-muted-foreground">Оберіть сегмент.</p>
           )}
         </Section>
       </div>
 
       {report ? (
         <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
-          <Section title="Longitudinal profiles" source="calc">
+          <Section title="Поздовжні профілі" source="calc">
             <ProfileCharts report={report} maxContactAngle={config.robot.max_contact_angle} />
           </Section>
-          <Section title="Static feasibility analysis" source="calc" description="Ideal robot centred on the centreline and aligned with it.">
+          <Section title="Статичний аналіз проходимості" source="calc" description="Ідеальний робот, відцентрований на осьовій лінії та вирівняний уздовж неї.">
             <FeasibilityPanel report={report} />
           </Section>
         </div>

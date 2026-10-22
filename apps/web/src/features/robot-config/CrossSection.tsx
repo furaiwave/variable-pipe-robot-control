@@ -6,6 +6,7 @@ import { Slider } from '@/components/ui/slider'
 import { KeyValue } from '@/components/common'
 import { ApiError, api } from '@/services/api'
 import { fmt } from '@/lib/format'
+import { bindingLabel } from '@/lib/violations'
 import type { CrossSectionView, RobotConfig } from '@/types/api'
 
 /**
@@ -49,19 +50,19 @@ export function CrossSection({ robot, safetyMargin, initialDiameter = 0.25 }: { 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-xs">
-            Pipe diameter: <span className="tabular font-medium">{(diameter * 1000).toFixed(0)} mm</span>
+            Діаметр труби: <span className="tabular font-medium">{(diameter * 1000).toFixed(0)} мм</span>
           </Label>
-          <Slider aria-label="Pipe diameter" min={60} max={600} step={1} value={[diameter * 1000]} onValueChange={(v) => setDiameter((v[0] ?? 250) / 1000)} />
+          <Slider aria-label="Діаметр труби" min={60} max={600} step={1} value={[diameter * 1000]} onValueChange={(v) => setDiameter((v[0] ?? 250) / 1000)} />
         </div>
         <div className="space-y-2">
           <Label className="text-xs">
-            Lateral offset: <span className="tabular font-medium">{(offset * 1000).toFixed(0)} mm</span>
+            Бічне зміщення: <span className="tabular font-medium">{(offset * 1000).toFixed(0)} мм</span>
           </Label>
-          <Slider aria-label="Lateral offset" min={-40} max={40} step={1} value={[offset * 1000]} onValueChange={(v) => setOffset((v[0] ?? 0) / 1000)} />
+          <Slider aria-label="Бічне зміщення" min={-40} max={40} step={1} value={[offset * 1000]} onValueChange={(v) => setOffset((v[0] ?? 0) / 1000)} />
         </div>
       </div>
       <div className="grid gap-3 md:grid-cols-[1fr_260px]">
-        <svg viewBox={`${-R - pad} ${-R - pad} ${2 * (R + pad)} ${2 * (R + pad)}`} className="h-64 w-full" role="img" aria-label="Robot cross-section in the pipe">
+        <svg viewBox={`${-R - pad} ${-R - pad} ${2 * (R + pad)} ${2 * (R + pad)}`} className="h-64 w-full" role="img" aria-label="Поперечний переріз робота в трубі">
           <circle cx={0} cy={0} r={R} className="fill-[var(--pipe-fill)] stroke-[var(--pipe-wall)]" strokeWidth={R * 0.02} />
           <circle cx={0} cy={0} r={Math.max(0, R - safetyMargin)} fill="none" className="stroke-warning/60" strokeWidth={R * 0.006} strokeDasharray={`${R * 0.03} ${R * 0.03}`} />
           <line x1={-R} y1={0} x2={R} y2={0} className="stroke-muted-foreground/40" strokeWidth={R * 0.004} />
@@ -82,23 +83,23 @@ export function CrossSection({ robot, safetyMargin, initialDiameter = 0.25 }: { 
           <div className="flex items-center gap-2">
             {loading ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : null}
             {view ? (
-              <Badge className={view.admissible ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'}>{view.admissible ? 'Admissible' : 'Not admissible'}</Badge>
+              <Badge className={view.admissible ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'}>{view.admissible ? 'Допустимо' : 'Недопустимо'}</Badge>
             ) : null}
           </div>
           {error ? <p className="text-xs text-destructive">{error}</p> : null}
           {view ? (
             <KeyValue
               items={[
-                ['Min. clearance', fmt.mm(view.clearance)],
-                ['Required', fmt.mm(view.required)],
-                ['Wall contact angle', `${fmt.deg(view.contact_angle)} / ${fmt.deg(view.max_contact_angle)}`],
-                ['Roll', fmt.deg(view.roll, 2)],
-                ['Binding constraint', view.binding],
+                ['Мін. зазор', fmt.mm(view.clearance)],
+                ['Необхідний', fmt.mm(view.required)],
+                ['Кут контакту зі стінкою', `${fmt.deg(view.contact_angle)} / ${fmt.deg(view.max_contact_angle)}`],
+                ['Крен', fmt.deg(view.roll, 2)],
+                ['Визначальне обмеження', bindingLabel(view.binding)],
               ]}
             />
           ) : null}
           <p className="text-[11px] text-muted-foreground">
-            Orange dots: wheel–wall contacts (outer tread edge). Red dot: critical envelope point. Dashed circle: required safety clearance.
+            Помаранчеві точки: контакти колесо–стінка (зовнішній край протектора). Червона точка: критична точка габариту. Пунктирне коло: необхідний безпечний зазор.
           </p>
         </div>
       </div>

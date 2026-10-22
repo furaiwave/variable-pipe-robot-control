@@ -19,11 +19,11 @@ function describe(s: Segment): string {
   const mm = (m: number) => `${(m * 1000).toFixed(0)}`
   switch (s.kind) {
     case 'straight':
-      return `L ${s.length.toFixed(2)} m · D ${mm(s.diameter)} mm`
+      return `L ${s.length.toFixed(2)} м · D ${mm(s.diameter)} мм`
     case 'transition':
-      return `L ${s.length.toFixed(2)} m · D ${mm(s.diameter_start)}→${mm(s.diameter_end)} mm`
+      return `L ${s.length.toFixed(2)} м · D ${mm(s.diameter_start)}→${mm(s.diameter_end)} мм`
     case 'bend':
-      return `R ${s.bend_radius.toFixed(2)} m · ${(s.angle * RAD2DEG).toFixed(0)}° · D ${mm(s.diameter)} mm`
+      return `R ${s.bend_radius.toFixed(2)} м · ${(s.angle * RAD2DEG).toFixed(0)}° · D ${mm(s.diameter)} мм`
   }
 }
 
@@ -46,49 +46,49 @@ export function SegmentList({ segments, selectedId, stations, onSelect, onAdd, o
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm">
-              <Plus /> Add segment
+              <Plus /> Додати сегмент
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Insert after selection</DropdownMenuLabel>
+            <DropdownMenuLabel>Вставити після виділеного</DropdownMenuLabel>
             <DropdownMenuItem onSelect={() => onAdd('straight')}>
-              <Minus /> Straight
+              <Minus /> Прямий
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onAdd('transition')}>
-              <Triangle /> Gradual diameter transition
+              <Triangle /> Плавний перехід діаметра
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onAdd('bend')}>
-              <Spline /> Circular bend
+              <Spline /> Круговий вигин
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => onAdd('narrow')}>
-              <Shrink /> Narrow passage (sudden step)
+              <Shrink /> Вузький прохід (раптова сходинка)
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onAdd('restriction')}>
-              <Plus /> Straight with restriction
+              <Plus /> Прямий зі звуженням
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="ml-auto flex gap-1">
-          <Button size="icon-sm" variant="ghost" aria-label="Move segment up" disabled={selectedIdx <= 0} onClick={() => selectedId && onMove(selectedId, -1)}>
+          <Button size="icon-sm" variant="ghost" aria-label="Перемістити сегмент вище" disabled={selectedIdx <= 0} onClick={() => selectedId && onMove(selectedId, -1)}>
             <ArrowUp />
           </Button>
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Move segment down"
+            aria-label="Перемістити сегмент нижче"
             disabled={selectedIdx < 0 || selectedIdx >= segments.length - 1}
             onClick={() => selectedId && onMove(selectedId, 1)}
           >
             <ArrowDown />
           </Button>
-          <Button size="icon-sm" variant="ghost" aria-label="Duplicate segment" disabled={selectedIdx < 0} onClick={() => selectedId && onDuplicate(selectedId)}>
+          <Button size="icon-sm" variant="ghost" aria-label="Дублювати сегмент" disabled={selectedIdx < 0} onClick={() => selectedId && onDuplicate(selectedId)}>
             <Copy />
           </Button>
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Delete segment"
+            aria-label="Видалити сегмент"
             disabled={selectedIdx < 0 || segments.length <= 1}
             onClick={() => selectedId && onRemove(selectedId)}
           >
@@ -96,7 +96,7 @@ export function SegmentList({ segments, selectedId, stations, onSelect, onAdd, o
           </Button>
         </div>
       </div>
-      <ol className="max-h-[420px] space-y-1 overflow-y-auto pr-1" aria-label="Pipeline segments">
+      <ol className="max-h-[420px] space-y-1 overflow-y-auto pr-1" aria-label="Сегменти трубопроводу">
         {segments.map((s, i) => {
           const Icon = ICON[s.kind]
           const active = s.id === selectedId
@@ -116,7 +116,7 @@ export function SegmentList({ segments, selectedId, stations, onSelect, onAdd, o
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">
                     {s.label || s.id}
-                    {s.restrictions.length ? <span className="ml-1 text-warning">· {s.restrictions.length} restr.</span> : null}
+                    {s.restrictions.length ? <span className="ml-1 text-warning">· {s.restrictions.length} звуж.</span> : null}
                     {Math.abs(s.inclination) > 1e-9 ? <span className="ml-1 text-muted-foreground">· {(s.inclination * RAD2DEG).toFixed(1)}°</span> : null}
                   </span>
                   <span className="tabular block text-muted-foreground">{describe(s)}</span>
@@ -124,7 +124,7 @@ export function SegmentList({ segments, selectedId, stations, onSelect, onAdd, o
                 <span className="tabular text-right text-muted-foreground">
                   s={stations[i]?.toFixed(2) ?? '—'}
                   <br />
-                  {segmentLength(s).toFixed(2)} m
+                  {segmentLength(s).toFixed(2)} м
                 </span>
               </button>
             </li>

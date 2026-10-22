@@ -32,14 +32,14 @@ describe('JSON export', () => {
     const doc = JSON.parse(text)
     expect(doc.format).toBe('variable-pipe-robot-control/experiment')
     expect(doc.exported_at).toBe('2026-01-01T00:00:00.000Z')
-    expect(doc.note).toMatch(/not physical measurements/)
+    expect(doc.note).toMatch(/не фізичні вимірювання/)
     expect(parseExperimentJson(text)).toEqual(r)
     // A bare results object is accepted too.
     expect(parseExperimentJson(JSON.stringify(r)).name).toBe('Test run')
   })
 
   it('rejects files without results', () => {
-    expect(() => parseExperimentJson('{"foo": 1}')).toThrow(/does not contain simulation results/)
+    expect(() => parseExperimentJson('{"foo": 1}')).toThrow(/не містить результатів моделювання/)
     expect(() => parseExperimentJson('not json')).toThrow()
   })
 

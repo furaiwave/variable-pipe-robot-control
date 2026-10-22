@@ -31,45 +31,45 @@ export function SimulationControls(p: SimulationControlsProps) {
   const canStart = !running && !paused
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="flex items-center gap-1.5" role="group" aria-label="Simulation controls">
+      <div className="flex items-center gap-1.5" role="group" aria-label="Керування моделюванням">
         {canStart ? (
           <Button onClick={p.onStart} disabled={p.busy}>
             {p.busy ? <Loader2 className="animate-spin" /> : <Play />}
-            {p.status && isTerminal(p.status) && !p.stale ? 'Restart' : 'Start'}
+            {p.status && isTerminal(p.status) && !p.stale ? 'Перезапустити' : 'Старт'}
           </Button>
         ) : null}
         {running ? (
           <Button variant="secondary" onClick={p.onPause} disabled={p.busy}>
-            <Pause /> Pause
+            <Pause /> Пауза
           </Button>
         ) : null}
         {paused ? (
           <Button onClick={p.onResume} disabled={p.busy || p.stale}>
-            <Play /> Resume
+            <Play /> Продовжити
           </Button>
         ) : null}
         <Button variant="outline" onClick={p.onStop} disabled={p.busy || !(running || paused || p.status === 'ready')}>
-          <Square /> Stop
+          <Square /> Зупинити
         </Button>
         <Button variant="outline" onClick={p.onReset} disabled={p.busy || p.status === null}>
-          <RotateCcw /> Reset
+          <RotateCcw /> Скинути
         </Button>
-        <Button variant="outline" onClick={p.onRunInstant} disabled={p.busy || running} title="Run to completion as fast as possible">
-          <Zap /> Run instantly
+        <Button variant="outline" onClick={p.onRunInstant} disabled={p.busy || running} title="Виконати до завершення якомога швидше">
+          <Zap /> Виконати миттєво
         </Button>
       </div>
       <div className="space-y-1">
         <Label htmlFor="playback" className="flex items-center gap-1 text-xs">
-          <FastForward className="size-3" /> Playback speed
+          <FastForward className="size-3" /> Швидкість відтворення
         </Label>
         <Select value={String(p.playback)} onValueChange={(v) => p.onPlayback(Number(v))}>
-          <SelectTrigger id="playback" size="sm" className="w-40">
+          <SelectTrigger id="playback" size="sm" className="w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {PLAYBACK_OPTIONS.map((v) => (
               <SelectItem key={v} value={String(v)}>
-                {v}× real time
+                {v}× реального часу
               </SelectItem>
             ))}
           </SelectContent>
@@ -77,10 +77,10 @@ export function SimulationControls(p: SimulationControlsProps) {
       </div>
       <div className="space-y-1">
         <Label htmlFor="controller" className="text-xs">
-          Controller
+          Регулятор
         </Label>
         <Select value={p.controller} onValueChange={(v) => p.onController(v as ControllerType)} disabled={running || paused}>
-          <SelectTrigger id="controller" size="sm" className="w-60">
+          <SelectTrigger id="controller" size="sm" className="w-80">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

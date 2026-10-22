@@ -2,32 +2,32 @@ import { CircleAlert, CircleCheck, CircleX, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { KeyValue } from '@/components/common'
 import { fmt } from '@/lib/format'
-import { VIOLATION_LABELS } from '@/lib/violations'
+import { VIOLATION_LABELS, bindingLabel } from '@/lib/violations'
 import type { FeasibilityReport } from '@/types/api'
 
 export function FeasibilityVerdict({ report, loading }: { report: FeasibilityReport | null; loading?: boolean }) {
   if (!report) {
     return (
       <Badge variant="outline">
-        {loading ? <Loader2 className="animate-spin" /> : null} {loading ? 'Analysing…' : 'No analysis'}
+        {loading ? <Loader2 className="animate-spin" /> : null} {loading ? 'Аналіз…' : 'Аналіз відсутній'}
       </Badge>
     )
   }
   if (!report.feasible)
     return (
       <Badge className="bg-destructive/15 text-destructive">
-        <CircleX /> Infeasible (static analysis)
+        <CircleX /> Непрохідний (статичний аналіз)
       </Badge>
     )
   if (report.has_warnings)
     return (
       <Badge className="bg-warning/15 text-warning">
-        <CircleAlert /> Passable with warnings
+        <CircleAlert /> Прохідний із попередженнями
       </Badge>
     )
   return (
     <Badge className="bg-success/15 text-success">
-      <CircleCheck /> Passable (static analysis)
+      <CircleCheck /> Прохідний (статичний аналіз)
     </Badge>
   )
 }
@@ -39,18 +39,18 @@ export function FeasibilityPanel({ report, compact = false }: { report: Feasibil
     <div className="space-y-3">
       <KeyValue
         items={[
-          ['Min. clearance (centred)', `${fmt.mm(report.min_clearance)} @ s = ${report.min_clearance_station.toFixed(2)} m`],
-          ['Min. lateral margin', `${fmt.mm(report.min_lateral_margin)} @ s = ${report.min_lateral_margin_station.toFixed(2)} m`],
-          ['Max. wall contact angle', fmt.deg(report.max_contact_angle)],
-          ['Geometric min. diameter', md ? `${fmt.mm(md.geometric)} (${md.geometric_binding})` : '—'],
-          ['Recommended min. diameter', md ? `${fmt.mm(md.recommended)} (${md.recommended_binding})` : '—'],
-          ['Max. climbable step', `${fmt.mm(report.max_step_height)} (β ≤ ${fmt.deg(report.max_climb_angle)})`],
-          ['Max. climbable slope', `${fmt.deg(report.slope_limit.max_slope)} (traction ${fmt.deg(report.slope_limit.traction_limit)}, torque ${fmt.deg(report.slope_limit.torque_limit)})`],
-          ...(compact ? [] : ([['Diameter steps', `${report.steps.length} (${report.steps.filter((s) => !s.climbable).length} not climbable)`]] as [string, string][])),
+          ['Мін. зазор (по центру)', `${fmt.mm(report.min_clearance)} @ s = ${report.min_clearance_station.toFixed(2)} м`],
+          ['Мін. бічний запас', `${fmt.mm(report.min_lateral_margin)} @ s = ${report.min_lateral_margin_station.toFixed(2)} м`],
+          ['Макс. кут контакту зі стінкою', fmt.deg(report.max_contact_angle)],
+          ['Геометричний мін. діаметр', md ? `${fmt.mm(md.geometric)} (${bindingLabel(md.geometric_binding)})` : '—'],
+          ['Рекомендований мін. діаметр', md ? `${fmt.mm(md.recommended)} (${bindingLabel(md.recommended_binding)})` : '—'],
+          ['Макс. висота сходинки', `${fmt.mm(report.max_step_height)} (β ≤ ${fmt.deg(report.max_climb_angle)})`],
+          ['Макс. нахил, що долається', `${fmt.deg(report.slope_limit.max_slope)} (зчеплення ${fmt.deg(report.slope_limit.traction_limit)}, момент ${fmt.deg(report.slope_limit.torque_limit)})`],
+          ...(compact ? [] : ([['Сходинки діаметра', `${report.steps.length} (непрохідних: ${report.steps.filter((s) => !s.climbable).length})`]] as [string, string][])),
         ]}
       />
       {report.issues.length > 0 ? (
-        <ul className="space-y-1" aria-label="Feasibility issues">
+        <ul className="space-y-1" aria-label="Проблеми проходимості">
           {report.issues.slice(0, compact ? 3 : 20).map((i, k) => {
             const soft = i.kind === 'safety_clearance' || i.kind === 'contact_angle'
             return (
@@ -59,10 +59,10 @@ export function FeasibilityPanel({ report, compact = false }: { report: Feasibil
               </li>
             )
           })}
-          {compact && report.issues.length > 3 ? <li className="text-xs text-muted-foreground">… {report.issues.length - 3} more</li> : null}
+          {compact && report.issues.length > 3 ? <li className="text-xs text-muted-foreground">… ще {report.issues.length - 3}</li> : null}
         </ul>
       ) : (
-        <p className="text-xs text-muted-foreground">No static constraint is violated by an ideally centred robot. Tracking errors can still cause violations during simulation.</p>
+        <p className="text-xs text-muted-foreground">Ідеально відцентрований робот не порушує жодного статичного обмеження. Похибки стеження все ж можуть спричинити порушення під час моделювання.</p>
       )}
     </div>
   )

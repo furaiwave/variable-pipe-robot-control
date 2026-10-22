@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { api } from '@/services/api'
 import { makeSegment, segmentEndDiameter } from '@/lib/schemas'
+import { localizeConfig } from '@/lib/localize'
 import type {
   ControllerConfig,
   ControllerType,
@@ -98,7 +99,8 @@ export const useConfigStore = create<ConfigState>()(
       async init(force = false) {
         const s = get()
         if (!force && s.config && s.controllers) {
-          set({ loadStatus: 'ready' })
+          // Configurations persisted before localisation keep English built-in names.
+          set({ config: localizeConfig(s.config), loadStatus: 'ready' })
           return
         }
         set({ loadStatus: 'loading', loadError: null })
@@ -106,9 +108,9 @@ export const useConfigStore = create<ConfigState>()(
           const [config, presets] = await Promise.all([api.defaultConfig(), api.presets()])
           const all = presets.find((p) => p.controllers.length >= 3)?.controllers ?? []
           const controllers = paramsFromConfigs([...all, config.controller])
-          if (!controllers) throw new Error('Server did not provide default parameters for all controllers')
+          if (!controllers) throw new Error('Сервер не надав типових параметрів для всіх регуляторів')
           set({
-            config,
+            config: localizeConfig(config),
             controllers,
             active: config.controller.type,
             selectedSegmentId: config.pipeline.segments[0]?.id ?? null,
@@ -189,7 +191,7 @@ export const useConfigStore = create<ConfigState>()(
         set((s) => {
           const params = controllers ? paramsFromConfigs([...controllers, c.controller], s.controllers ?? undefined) : null
           return {
-            config: c,
+            config: localizeConfig(c),
             controllers: params ?? paramsFromConfigs([c.controller], s.controllers ?? undefined) ?? s.controllers,
             active: c.controller.type,
             selectedSegmentId: c.pipeline.segments[0]?.id ?? null,

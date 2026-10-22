@@ -36,7 +36,7 @@ export class ApiError extends Error {
       .slice(0, 3)
       .map((d) => `${d.field}: ${d.message}`)
       .join('; ')
-    return this.details.length > 3 ? `${head}; … (${this.details.length - 3} more)` : head
+    return this.details.length > 3 ? `${head}; … (ще ${this.details.length - 3})` : head
   }
 }
 
@@ -65,7 +65,7 @@ export function createApiClient({ baseUrl = '', fetchImpl }: ApiClientOptions = 
       })
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') throw e
-      throw new ApiError(0, 'network_error', `Cannot reach the simulation server (${e instanceof Error ? e.message : String(e)}). Is the Rust API running?`)
+      throw new ApiError(0, 'network_error', `Не вдається з’єднатися із сервером моделювання (${e instanceof Error ? e.message : String(e)}). Чи запущено Rust API?`)
     }
     if (resp.status === 204) return undefined as T
     const text = await resp.text()
@@ -75,14 +75,14 @@ export function createApiClient({ baseUrl = '', fetchImpl }: ApiClientOptions = 
         data = JSON.parse(text)
       } catch {
         if (resp.ok) return text as T
-        throw new ApiError(resp.status, 'invalid_response', `Unexpected response (${resp.status}): ${text.slice(0, 200)}`)
+        throw new ApiError(resp.status, 'invalid_response', `Неочікувана відповідь (${resp.status}): ${text.slice(0, 200)}`)
       }
     }
     if (!resp.ok) {
       if (isErrorBody(data)) {
         throw new ApiError(resp.status, data.error.code, data.error.message, data.error.details ?? [])
       }
-      throw new ApiError(resp.status, 'http_error', `Request failed with status ${resp.status}`)
+      throw new ApiError(resp.status, 'http_error', `Запит завершився зі статусом ${resp.status}`)
     }
     return data as T
   }

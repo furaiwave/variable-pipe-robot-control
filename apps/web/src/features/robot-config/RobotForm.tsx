@@ -56,18 +56,18 @@ export function RobotForm({ robot, onApply, onDraft }: RobotFormProps) {
   const err = (k: keyof RobotFormValues) => formState.errors[k]?.message
 
   return (
-    <form onSubmit={submit} className="space-y-4" aria-label="Robot parameters" noValidate>
+    <form onSubmit={submit} className="space-y-4" aria-label="Параметри робота" noValidate>
       <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
         <div className="space-y-1">
           <Label htmlFor="robot-name" className="text-xs">
-            Configuration name
+            Назва конфігурації
           </Label>
           <Input id="robot-name" className="h-8" aria-invalid={err('name') ? true : undefined} {...register('name')} />
           {err('name') ? <p role="alert" className="text-xs text-destructive">{err('name')}</p> : null}
         </div>
         <div className="space-y-1">
           <Label htmlFor="robot-wheel_count" className="text-xs">
-            Number of wheels
+            Кількість коліс
           </Label>
           <Select
             value={String(watch('wheel_count'))}
@@ -77,9 +77,9 @@ export function RobotForm({ robot, onApply, onDraft }: RobotFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="4">4 (2 axles)</SelectItem>
-              <SelectItem value="6">6 (3 axles)</SelectItem>
-              <SelectItem value="8">8 (4 axles)</SelectItem>
+              <SelectItem value="4">4 (2 осі)</SelectItem>
+              <SelectItem value="6">6 (3 осі)</SelectItem>
+              <SelectItem value="8">8 (4 осі)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -105,12 +105,12 @@ export function RobotForm({ robot, onApply, onDraft }: RobotFormProps) {
       ))}
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" disabled={formState.isSubmitting}>
-          <Check /> {applied ? 'Applied' : 'Apply robot parameters'}
+          <Check /> {applied ? 'Застосовано' : 'Застосувати параметри робота'}
         </Button>
         <Button type="button" variant="outline" onClick={() => reset(robotToForm(robot))} disabled={!formState.isDirty}>
-          <RotateCcw /> Revert
+          <RotateCcw /> Скасувати зміни
         </Button>
-        {!formState.isValid ? <span className="text-xs text-destructive">Fix the highlighted fields before applying.</span> : null}
+        {!formState.isValid ? <span className="text-xs text-destructive">Виправте виділені поля перед застосуванням.</span> : null}
       </div>
     </form>
   )

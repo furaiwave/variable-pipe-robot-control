@@ -40,7 +40,7 @@ export function SimulationPage() {
   )
   const stale = Boolean(sim.simId && effective && sim.simKey !== fullKey(effective))
 
-  if (!config || !effective) return <EmptyState title="Loading configuration…" icon={<Loader2 className="animate-spin" />} />
+  if (!config || !effective) return <EmptyState title="Завантаження конфігурації…" icon={<Loader2 className="animate-spin" />} />
 
   const status = stale ? null : (sim.snapshot?.status ?? null)
   const startPose = report?.geometry.length
@@ -53,19 +53,19 @@ export function SimulationPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Simulation workspace"
-        description="The Rust engine integrates the model with a fixed time step; playback speed only changes how fast simulated time advances on screen."
+        title="Робоча область моделювання"
+        description="Rust-рушій інтегрує модель із фіксованим кроком; швидкість відтворення змінює лише темп, з яким модельний час іде на екрані."
         actions={
           <>
             <FeasibilityVerdict report={report} loading={loading} />
             <Button variant="outline" size="sm" onClick={() => setShowSettings((v) => !v)} aria-expanded={showSettings}>
-              <Settings2 /> Run settings
+              <Settings2 /> Налаштування запуску
             </Button>
           </>
         }
       />
 
-      <Section title="Controls" source="live">
+      <Section title="Керування" source="live">
         <SimulationControls
           status={status}
           busy={sim.busy}
@@ -83,7 +83,7 @@ export function SimulationPage() {
         />
         {stale ? (
           <p className="mt-2 flex items-center gap-1 text-xs text-warning">
-            <Info className="size-3.5" /> The configuration changed since this simulation was created. Start or reset creates a new simulation.
+            <Info className="size-3.5" /> Конфігурація змінилася після створення цього моделювання. Старт або скидання створить нове моделювання.
           </p>
         ) : null}
       </Section>
@@ -91,10 +91,10 @@ export function SimulationPage() {
       {sim.error ? (
         <Alert variant="destructive">
           <TriangleAlert />
-          <AlertTitle>Request failed</AlertTitle>
+          <AlertTitle>Помилка запиту</AlertTitle>
           <AlertDescription>{sim.error}</AlertDescription>
           <AlertAction>
-            <Button size="icon-xs" variant="ghost" aria-label="Dismiss" onClick={sim.clearError}>
+            <Button size="icon-xs" variant="ghost" aria-label="Закрити" onClick={sim.clearError}>
               <X />
             </Button>
           </AlertAction>
@@ -102,28 +102,28 @@ export function SimulationPage() {
       ) : null}
 
       {showSettings ? (
-        <Section title="Run settings" source="config" description="Changes create a new simulation on the next start/reset.">
+        <Section title="Налаштування запуску" source="config" description="Зміни створять нове моделювання під час наступного старту чи скидання.">
           <SimSettingsForm key={revision} config={config} onCommit={setConfig} />
         </Section>
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <Section
-          title="Pipeline and robot"
+          title="Трубопровід і робот"
           source="live"
-          description="Dashed: reference trajectory. Solid: actual trajectory. Red dots: samples with clearance/contact-angle violations."
+          description="Пунктир: опорна траєкторія. Суцільна: фактична траєкторія. Червоні точки: відліки з порушенням зазору чи кута контакту."
           actions={
             <>
               <div className="flex items-center gap-1.5">
                 <Switch id="follow" checked={follow} onCheckedChange={setFollow} />
                 <Label htmlFor="follow" className="text-xs">
-                  Follow robot
+                  Стежити за роботом
                 </Label>
               </div>
               <div className="flex items-center gap-1.5">
                 <Switch id="showref" checked={showRef} onCheckedChange={setShowRef} />
                 <Label htmlFor="showref" className="text-xs">
-                  Reference
+                  Опорна траєкторія
                 </Label>
               </div>
             </>
@@ -139,36 +139,36 @@ export function SimulationPage() {
             steps={report?.steps}
             follow={follow}
             showReference={showRef}
-            ariaLabel="Live pipeline view with robot position and trajectories"
+            ariaLabel="Трубопровід у реальному часі з положенням робота та траєкторіями"
           />
         </Section>
         <div className="space-y-4">
-          <Section title="Telemetry" source="live">
+          <Section title="Телеметрія" source="live">
             <TelemetryPanel snapshot={stale ? null : sim.snapshot} sample={stale ? null : sample} robot={config.robot} />
           </Section>
         </div>
       </div>
 
-      <Section title="Live signals" source="live">
+      <Section title="Сигнали в реальному часі" source="live">
         <LiveCharts />
       </Section>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Section
-          title="Collision and feasibility warnings"
+          title="Попередження про зіткнення та проходимість"
           source="live"
           actions={
             status && isTerminal(status) ? (
               <Button size="sm" variant="outline" onClick={() => navigate('/results')}>
-                <ChartLine /> Open results
+                <ChartLine /> Відкрити результати
               </Button>
             ) : null
           }
         >
           <ViolationsPanel status={status} failure={stale ? null : (sim.snapshot?.failure ?? null)} events={stale ? [] : sim.events} />
         </Section>
-        <Section title="Pre-run static analysis" source="calc" description="Predicts passage feasibility for an ideally centred robot before running.">
-          {report ? <FeasibilityPanel report={report} compact /> : <p className="text-xs text-muted-foreground">Analysing…</p>}
+        <Section title="Статичний аналіз перед запуском" source="calc" description="Прогнозує проходимість для ідеально відцентрованого робота до запуску.">
+          {report ? <FeasibilityPanel report={report} compact /> : <p className="text-xs text-muted-foreground">Аналіз…</p>}
         </Section>
       </div>
     </div>

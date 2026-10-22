@@ -12,7 +12,7 @@ import { ApiError, api } from '@/services/api'
 import { fmt } from '@/lib/format'
 import { gainScheduledSchema, kinematicSchema, pidTrackingSchema } from '@/lib/schemas'
 import { scenarioKey } from '@/lib/scenario'
-import { CONTROLLER_NAMES } from '@/lib/violations'
+import { CONTROLLER_NAMES, STATUS_LABELS, VIOLATION_LABELS } from '@/lib/violations'
 import { CONTROLLER_TYPES, controllerConfig, useConfigStore } from '@/stores/config-store'
 import { useResultsStore } from '@/stores/results-store'
 import type { ControllerType, SimulationResults } from '@/types/api'
@@ -24,13 +24,13 @@ const Formula = ({ children }: { children: ReactNode }) => (
 
 const PRINCIPLE: Record<ControllerType, { badge: string; text: ReactNode }> = {
   kinematic: {
-    badge: 'Baseline · P-type',
+    badge: 'Базовий · П-типу',
     text: (
       <>
         <p>
-          Nonlinear kinematic tracking law of Kanayama et al. (1990). The tracking error is expressed in the robot frame; the law combines
-          reference feed-forward with proportional feedback and has no integral action, so constant disturbances (e.g. a wheel-radius mismatch)
-          leave a steady-state offset.
+          Нелінійний кінематичний закон стеження Kanayama та ін. (1990). Похибка стеження виражається в системі координат робота; закон поєднує
+          пряму подачу опорного сигналу з пропорційним зворотним зв’язком і не має інтегральної складової, тому сталі збурення (наприклад,
+          різниця радіусів коліс) залишають усталену похибку.
         </p>
         <Formula>{`v = v_r·cos e_θ + K_x·e_x
 ω = ω_r + v_r·(K_y·e_y + K_θ·sin e_θ)`}</Formula>
@@ -38,29 +38,29 @@ const PRINCIPLE: Record<ControllerType, { badge: string; text: ReactNode }> = {
     ),
   },
   pid: {
-    badge: 'Fixed gains',
+    badge: 'Фіксовані коефіцієнти',
     text: (
       <>
         <p>
-          Two discrete PID loops with filtered derivative, output clamping and back-calculation anti-windup (also driven by saturation in
-          the downstream wheel-command stage). The lateral loop acts on the cross-track error of a look-ahead point.
+          Два дискретні ПІД-контури з фільтрованою похідною, обмеженням виходу та анти-віндапом методом зворотного перерахунку (враховує
+          також насичення в каскаді команд коліс). Бічний контур діє на поперечну похибку точки попередження (look-ahead).
         </p>
-        <Formula>{`v = v_r·cos e_θ + PID_x(e_x)          (trajectory mode)
-v = v_r + PID_v(v_r − v)              (velocity mode)
+        <Formula>{`v = v_r·cos e_θ + PID_x(e_x)          (режим траєкторії)
+v = v_r + PID_v(v_r − v)              (режим швидкості)
 ω = ω_r + PID_c(e_c),  e_c = e_y·cos e_θ + l_a·sin e_θ
 I ← clamp(I + Δt·(K_i·e + K_t·(u_sat − u)), ±I_max)`}</Formula>
       </>
     ),
   },
   gain_scheduled: {
-    badge: 'Gain scheduling',
+    badge: 'Планування коефіцієнтів',
     text: (
       <>
         <p>
-          The PID structure above with lateral gains scheduled by explicit rules on known geometry: the lateral feasibility margin c_m ahead
-          (from the engine's static analysis) and the look-ahead curvature κ. Gains are lowered in wide straight sections and raised in narrow
-          passages and bends. This is classical gain scheduling — no plant parameters are estimated on-line, so it is <em>not</em> model-reference
-          adaptive control.
+          Та сама ПІД-структура, бічні коефіцієнти якої змінюються за явними правилами залежно від відомої геометрії: бічного запасу проходимості
+          c_m попереду (за статичним аналізом рушія) та кривини κ попереду. У широких прямих ділянках коефіцієнти знижуються, у вузьких
+          проходах і вигинах — підвищуються. Це класичне планування коефіцієнтів (gain scheduling): параметри об’єкта онлайн не оцінюються, тому
+          це <em>не</em> адаптивне керування з еталонною моделлю.
         </p>
         <Formula>{`σ  = 1 − clamp(c_m / c_ref, 0, 1),   κ_n = clamp(|κ|·ℓ_κ, 0, 1)
 m* = m_min + (m_max − m_min)·max(σ, κ_n),   m ← low-pass(m*, T_s)
@@ -71,18 +71,18 @@ K_p = m·K_p0,  K_i = m·K_i0,  K_d = √m·K_d0`}</Formula>
 }
 
 function MetricsForController({ run }: { run: SimulationResults | undefined }) {
-  if (!run) return <p className="text-xs text-muted-foreground">No run of this controller for the current scenario yet.</p>
+  if (!run) return <p className="text-xs text-muted-foreground">Для поточного сценарію цей регулятор ще не запускався.</p>
   const m = run.metrics
   return (
     <KeyValue
       items={[
-        ['Outcome', run.status === 'completed' ? 'completed' : `${run.status}${run.failure ? ` – ${run.failure.kind.replace(/_/g, ' ')} @ s=${run.failure.station.toFixed(2)} m` : ''}`],
-        ['Position error RMSE / max', `${fmt.mm(m.position_error.rmse, 2)} / ${fmt.mm(m.position_error.max, 2)}`],
-        ['Cross-track RMSE / max', `${fmt.mm(m.lateral_error.rmse, 2)} / ${fmt.mm(m.lateral_error.max, 2)}`],
-        ['Heading RMSE', fmt.deg(m.heading_error.rmse, 2)],
-        ['Min. clearance', fmt.mm(m.min_clearance, 2)],
-        ['Violations / collisions', `${m.constraint_violation_count} / ${m.collision_count}`],
-        ['Wheel saturation (steps)', fmt.pct(m.wheel_saturation_ratio)],
+        ['Результат', `${STATUS_LABELS[run.status]}${run.failure ? ` – ${VIOLATION_LABELS[run.failure.kind]} @ s=${run.failure.station.toFixed(2)} м` : ''}`],
+        ['Похибка положення СКВ / макс.', `${fmt.mm(m.position_error.rmse, 2)} / ${fmt.mm(m.position_error.max, 2)}`],
+        ['Поперечна похибка СКВ / макс.', `${fmt.mm(m.lateral_error.rmse, 2)} / ${fmt.mm(m.lateral_error.max, 2)}`],
+        ['СКВ похибки курсу', fmt.deg(m.heading_error.rmse, 2)],
+        ['Мін. зазор', fmt.mm(m.min_clearance, 2)],
+        ['Порушення / зіткнення', `${m.constraint_violation_count} / ${m.collision_count}`],
+        ['Насичення коліс (частка кроків)', fmt.pct(m.wheel_saturation_ratio)],
       ]}
     />
   )
@@ -100,7 +100,7 @@ export function ControllersPage() {
   const [busy, setBusy] = useState(false)
   const navigate = useNavigate()
 
-  if (!config || !controllers) return <EmptyState title="Loading configuration…" icon={<Loader2 className="animate-spin" />} />
+  if (!config || !controllers) return <EmptyState title="Завантаження конфігурації…" icon={<Loader2 className="animate-spin" />} />
 
   const key = scenarioKey(config)
   const latest = new Map<ControllerType, SimulationResults>()
@@ -119,7 +119,7 @@ export function ControllersPage() {
         enabledTypes.map((t) => controllerConfig(t, controllers)),
       )
       addComparison(resp)
-      toast.success(`Compared ${resp.runs.length} controllers under identical conditions`)
+      toast.success(`Порівняно регуляторів за однакових умов: ${resp.runs.length}`)
       navigate('/results')
     } catch (e) {
       toast.error(e instanceof ApiError ? e.describe() : String(e))
@@ -132,28 +132,28 @@ export function ControllersPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Control algorithms"
-        description="Configure the implemented trajectory-tracking controllers. All of them track the same reference along the pipe centreline."
+        title="Алгоритми керування"
+        description="Налаштуйте реалізовані регулятори стеження за траєкторією. Усі вони відстежують одну й ту саму опорну траєкторію вздовж осі труби."
         actions={
           <Button onClick={compare} disabled={busy || enabledTypes.length === 0}>
-            {busy ? <Loader2 className="animate-spin" /> : <GitCompareArrows />} Compare enabled ({enabledTypes.length}) under identical conditions
+            {busy ? <Loader2 className="animate-spin" /> : <GitCompareArrows />} Порівняти увімкнені ({enabledTypes.length}) за однакових умов
           </Button>
         }
       />
-      <Section title="Common wheel-command stage and saturation limits" source="config" description="Applied identically to every controller output (limits come from the robot configuration).">
+      <Section title="Спільний каскад команд коліс і межі насичення" source="config" description="Однаково застосовується до виходу кожного регулятора (межі беруться з конфігурації робота).">
         <div className="grid gap-4 md:grid-cols-2">
-          <Formula>{`1. clamp |v| ≤ v_max, |ω| ≤ ω_max
+          <Formula>{`1. обмеження |v| ≤ v_max, |ω| ≤ ω_max
 2. ω_R = (v + ω·L/2)/r,  ω_L = (v − ω·L/2)/r
-3. if max|ω_w| > ω_w,max: scale both (curvature preserved)
-4. |Δω_w| ≤ α_max·Δt (rate limit) → motor lag τ_m → torque/traction limits`}</Formula>
+3. якщо max|ω_w| > ω_w,max: масштабувати обидва (кривина зберігається)
+4. |Δω_w| ≤ α_max·Δt (обмеження швидкості зміни) → інерція двигуна τ_m → межі моменту/зчеплення`}</Formula>
           <KeyValue
             items={[
               ['v_max', fmt.mps(r.max_linear_velocity)],
               ['ω_max', fmt.radps(r.max_angular_velocity)],
               ['ω_wheel,max', fmt.radps(r.max_wheel_speed)],
-              ['α_wheel,max', `${r.max_wheel_acceleration} rad/s²`],
+              ['α_wheel,max', `${r.max_wheel_acceleration} рад/с²`],
               ['τ_motor,max', fmt.nm(r.max_motor_torque)],
-              ['Motor time constant τ_m', fmt.s(r.motor_time_constant, 3)],
+              ['Стала часу двигуна τ_m', fmt.s(r.motor_time_constant, 3)],
             ]}
           />
         </div>
@@ -177,11 +177,11 @@ export function ControllersPage() {
                 <div className="flex items-center gap-2">
                   <Switch id={`en-${t}`} checked={enabled[t]} onCheckedChange={(v) => setEnabled(t, v)} />
                   <Label htmlFor={`en-${t}`} className="text-xs">
-                    Include in comparisons
+                    Брати участь у порівняннях
                   </Label>
                 </div>
                 <Button size="xs" variant={active === t ? 'default' : 'outline'} onClick={() => setActive(t)} aria-pressed={active === t}>
-                  {active === t ? 'Active for single runs' : 'Use for single runs'}
+                  {active === t ? 'Активний для одиночних запусків' : 'Використовувати для одиночних запусків'}
                 </Button>
               </div>
               <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">{PRINCIPLE[t].text}</div>
@@ -194,11 +194,11 @@ export function ControllersPage() {
                   onCommit={(v) => setControllerParams('kinematic', v)}
                   groups={[
                     {
-                      title: 'Gains',
+                      title: 'Коефіцієнти',
                       fields: [
-                        { path: 'k_x', label: 'K_x', unit: '1/s', step: 0.1 },
-                        { path: 'k_y', label: 'K_y', unit: '1/m²', step: 1 },
-                        { path: 'k_theta', label: 'K_θ', unit: '1/m', step: 0.5 },
+                        { path: 'k_x', label: 'K_x', unit: '1/с', step: 0.1 },
+                        { path: 'k_y', label: 'K_y', unit: '1/м²', step: 1 },
+                        { path: 'k_theta', label: 'K_θ', unit: '1/м', step: 0.5 },
                       ],
                     },
                   ]}
@@ -212,9 +212,9 @@ export function ControllersPage() {
                   modePath="longitudinal_mode"
                   onCommit={(v) => setControllerParams('pid', v)}
                   groups={[
-                    { title: 'Look-ahead', fields: [{ path: 'lookahead', label: 'l_a', unit: 'm', step: 0.01 }] },
-                    { title: 'Lateral loop (ω correction)', fields: pidGainFields('lateral', 'rad/s', 'm') },
-                    { title: 'Longitudinal loop (v correction)', fields: pidGainFields('longitudinal', 'm/s', 'm') },
+                    { title: 'Відстань попередження', fields: [{ path: 'lookahead', label: 'l_a', unit: 'м', step: 0.01 }] },
+                    { title: 'Бічний контур (корекція ω)', fields: pidGainFields('lateral', 'рад/с', 'м') },
+                    { title: 'Поздовжній контур (корекція v)', fields: pidGainFields('longitudinal', 'м/с', 'м') },
                   ]}
                 />
               ) : (
@@ -227,23 +227,23 @@ export function ControllersPage() {
                   onCommit={(v) => setControllerParams('gain_scheduled', v)}
                   groups={[
                     {
-                      title: 'Scheduling rules',
+                      title: 'Правила планування',
                       fields: [
-                        { path: 'margin_reference', label: 'c_ref', unit: 'm', step: 0.005 },
-                        { path: 'curvature_length', label: 'ℓ_κ', unit: 'm', step: 0.05 },
+                        { path: 'margin_reference', label: 'c_ref', unit: 'м', step: 0.005 },
+                        { path: 'curvature_length', label: 'ℓ_κ', unit: 'м', step: 0.05 },
                         { path: 'min_multiplier', label: 'm_min', step: 0.1 },
                         { path: 'max_multiplier', label: 'm_max', step: 0.1 },
-                        { path: 'schedule_time_constant', label: 'T_s', unit: 's', step: 0.05 },
+                        { path: 'schedule_time_constant', label: 'T_s', unit: 'с', step: 0.05 },
                       ],
                     },
-                    { title: 'Base look-ahead', fields: [{ path: 'base.lookahead', label: 'l_a', unit: 'm', step: 0.01 }] },
-                    { title: 'Base lateral loop', fields: pidGainFields('base.lateral', 'rad/s', 'm') },
-                    { title: 'Base longitudinal loop', fields: pidGainFields('base.longitudinal', 'm/s', 'm') },
+                    { title: 'Базова відстань попередження', fields: [{ path: 'base.lookahead', label: 'l_a', unit: 'м', step: 0.01 }] },
+                    { title: 'Базовий бічний контур', fields: pidGainFields('base.lateral', 'рад/с', 'м') },
+                    { title: 'Базовий поздовжній контур', fields: pidGainFields('base.longitudinal', 'м/с', 'м') },
                   ]}
                 />
               )}
               <div className="space-y-1 border-t pt-3">
-                <p className="text-xs font-medium">Performance on the current scenario (latest run, simulated)</p>
+                <p className="text-xs font-medium">Показники на поточному сценарії (останній запуск, моделювання)</p>
                 <MetricsForController run={latest.get(t)} />
               </div>
             </div>
@@ -251,24 +251,24 @@ export function ControllersPage() {
         ))}
       </div>
       {latest.size > 1 ? (
-        <Section title="Side-by-side (latest runs of the current scenario)" source="calc">
+        <Section title="Порівняння (останні запуски поточного сценарію)" source="calc">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Controller</TableHead>
-                <TableHead>Outcome</TableHead>
-                <TableHead className="text-right">Pos. RMSE</TableHead>
-                <TableHead className="text-right">Cross-track RMSE</TableHead>
-                <TableHead className="text-right">Cross-track max</TableHead>
-                <TableHead className="text-right">Min. clearance</TableHead>
-                <TableHead className="text-right">Energy</TableHead>
+                <TableHead>Регулятор</TableHead>
+                <TableHead>Результат</TableHead>
+                <TableHead className="text-right">СКВ положення</TableHead>
+                <TableHead className="text-right">СКВ поперечна</TableHead>
+                <TableHead className="text-right">Макс. поперечна</TableHead>
+                <TableHead className="text-right">Мін. зазор</TableHead>
+                <TableHead className="text-right">Енергія</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {[...latest.entries()].map(([t, run]) => (
                 <TableRow key={t}>
                   <TableCell>{CONTROLLER_NAMES[t]}</TableCell>
-                  <TableCell>{run.status}</TableCell>
+                  <TableCell>{STATUS_LABELS[run.status]}</TableCell>
                   <TableCell className="tabular text-right">{fmt.mm(run.metrics.position_error.rmse, 2)}</TableCell>
                   <TableCell className="tabular text-right">{fmt.mm(run.metrics.lateral_error.rmse, 2)}</TableCell>
                   <TableCell className="tabular text-right">{fmt.mm(run.metrics.lateral_error.max, 2)}</TableCell>

@@ -35,7 +35,7 @@ export function RobotSchematic({ robot }: { robot: RobotConfig }) {
       viewBox={`${-L / 2 - pad} ${-W / 2 - pad} ${vbW} ${vbH}`}
       className="h-64 w-full text-muted-foreground"
       role="img"
-      aria-label={`Robot top view: body ${mm(robot.body_length)} by ${mm(robot.body_width)} mm, wheelbase ${mm(robot.wheelbase)} mm, track ${mm(robot.track_width)} mm`}
+      aria-label={`Робот, вид зверху: корпус ${mm(robot.body_length)} на ${mm(robot.body_width)} мм, колісна база ${mm(robot.wheelbase)} мм, колія ${mm(robot.track_width)} мм`}
     >
       <defs>
         <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
@@ -66,11 +66,11 @@ export function RobotSchematic({ robot }: { robot: RobotConfig }) {
       />
       <circle cx={robot.com_offset_x} cy={0} r={fs * 0.35} className="fill-chart-2" />
       <text x={robot.com_offset_x + fs * 0.5} y={-fs * 0.5} fontSize={fs * 0.85} fill="currentColor">
-        CoM
+        ЦМ
       </text>
       <line x1={0} y1={0} x2={robot.body_length * 0.35} y2={0} stroke="currentColor" strokeWidth={sw * 1.5} markerEnd="url(#arr)" />
-      {dimH(-robot.body_length / 2, robot.body_length / 2, -W / 2 - pad * 0.45, `body ${mm(robot.body_length)} mm`)}
-      {dimH(axles[0]!, axles[axles.length - 1]!, W / 2 + pad * 0.5, `wheelbase ${mm(robot.wheelbase)} mm`)}
+      {dimH(-robot.body_length / 2, robot.body_length / 2, -W / 2 - pad * 0.45, `корпус ${mm(robot.body_length)} мм`)}
+      {dimH(axles[0]!, axles[axles.length - 1]!, W / 2 + pad * 0.5, `база ${mm(robot.wheelbase)} мм`)}
       {dimV(-robot.track_width / 2, robot.track_width / 2, L / 2 + pad * 0.15, `L ${mm(robot.track_width)}`)}
       {dimV(-robot.body_width / 2, robot.body_width / 2, -L / 2 - pad * 0.8, `${mm(robot.body_width)}`)}
       <text x={axles[axles.length - 1]!} y={-robot.track_width / 2 - robot.wheel_width} fontSize={fs * 0.85} textAnchor="middle" fill="currentColor">

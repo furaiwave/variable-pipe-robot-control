@@ -13,9 +13,9 @@ import type { SimulationStatus } from '@/types/api'
 export type DataSource = 'live' | 'config' | 'calc'
 
 const SOURCE: Record<DataSource, { label: string; icon: typeof Activity; cls: string; tip: string }> = {
-  live: { label: 'LIVE', icon: Activity, cls: 'text-success border-success/40', tip: 'Live simulation data streamed from the Rust engine' },
-  config: { label: 'CONFIG', icon: Settings2, cls: 'text-muted-foreground border-border', tip: 'Configured input parameter' },
-  calc: { label: 'CALC', icon: Calculator, cls: 'text-primary border-primary/40', tip: 'Calculated by the engine from the model' },
+  live: { label: 'НАЖИВО', icon: Activity, cls: 'text-success border-success/40', tip: 'Дані моделювання в реальному часі, що надходять від Rust-рушія' },
+  config: { label: 'ПАРАМЕТР', icon: Settings2, cls: 'text-muted-foreground border-border', tip: 'Заданий вхідний параметр' },
+  calc: { label: 'РОЗРАХУНОК', icon: Calculator, cls: 'text-primary border-primary/40', tip: 'Розраховано рушієм за моделлю' },
 }
 
 export function SourceBadge({ source, className }: { source: DataSource; className?: string }) {
@@ -129,7 +129,7 @@ const STATUS_CLS: Record<SimulationStatus, string> = {
 }
 
 export function StatusBadge({ status }: { status: SimulationStatus | null | undefined }) {
-  if (!status) return <Badge variant="outline">No simulation</Badge>
+  if (!status) return <Badge variant="outline">Немає моделювання</Badge>
   return (
     <Badge className={cn('font-semibold', STATUS_CLS[status])} data-testid="status-badge">
       {status === 'running' ? <span className="size-1.5 animate-pulse rounded-full bg-current" /> : null}
